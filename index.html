@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="it" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Segnapunti 5000 - Punteggio Tondo & Penalità</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- JS Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            touch-action: manipulation;
+        }
+
+        .font-mono-num {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .table-container::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+        .table-container::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        .table-container::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        @keyframes pulse-red {
+            0%, 100% { border-color: rgba(239, 68, 68, 0.9); background-color: rgba(127, 29, 29, 0.4); }
+            50% { border-color: rgba(248, 113, 113, 1); background-color: rgba(185, 28, 28, 0.6); }
+        }
+        .penalty-card {
+            animation: pulse-red 2s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-full flex flex-col justify-between selection:bg-emerald-500 selection:text-slate-950">
+
+    <!-- HEADER / BARRA SUPERIORE -->
+    <header class="border-b border-slate-800 bg-slate-900/90 py-3.5 px-4 sm:px-6 sticky top-0 z-30 backdrop-blur-md">
+        <div class="max-w-6xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-emerald-950/50">
+                    5k
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-base sm:text-lg text-white leading-tight">Segnapunti 5000</h1>
+                    <p class="text-[11px] text-slate-400">Chiusura 5000 Tondo & Penalità -500 pt</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <button id="undoGlobalBtn" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition flex items-center space-x-1.5 shadow-sm active:scale-95">
+                    <i class="fa-solid fa-rotate-left text-amber-400"></i>
+                    <span class="hidden sm:inline">Annulla Mossa</span>
+                </button>
+                <button id="openResetModalBtn" class="px-3 py-1.5 rounded-xl bg-red-950/80 hover:bg-red-900 text-red-200 text-xs font-bold border border-red-800 transition active:scale-95 flex items-center space-x-1.5 shadow-md">
+                    <i class="fa-solid fa-power-off text-red-400"></i>
+                    <span>Nuova Partita</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl w-full mx-auto p-3 sm:p-6 flex-1 flex flex-col space-y-5">
+
+        <!-- BANNER NOTIFICA PENALITÀ / SUPERAMENTO -->
+        <div id="alertBanner" class="hidden rounded-2xl p-4 shadow-2xl transition-all duration-300">
+            <div class="flex items-center space-x-3">
+                <div id="alertIcon" class="w-11 h-11 rounded-full flex items-center justify-center text-white text-2xl shrink-0 shadow-lg">
+                    ⚡
+                </div>
+                <div class="flex-1">
+                    <h3 id="alertTitle" class="text-xs uppercase tracking-wider font-extrabold text-red-300">AVVISO DI GIOCO</h3>
+                    <p id="alertMessage" class="text-sm sm:text-base font-bold text-white leading-snug">---</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SEZIONE 1: Aggiungi Giocatore -->
+        <section class="bg-slate-900 rounded-2xl p-4 border border-slate-800 shadow-xl backdrop-blur-sm">
+            <form id="addPlayerForm" class="flex flex-col sm:flex-row gap-2.5">
+                <div class="flex-1 relative">
+                    <i class="fa-solid fa-user-plus absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                    <input 
+                        type="text" 
+                        id="newPlayerName" 
+                        placeholder="Inserisci nome giocatore (es. Marco, Giulia, Luca)..." 
+                        class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm font-medium text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition"
+                        autocomplete="off"
+                    >
+                </div>
+                <button 
+                    type="submit" 
+                    class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition flex items-center justify-center space-x-2 shadow-lg shadow-emerald-950 shrink-0 active:scale-95"
+                >
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Aggiungi Giocatore</span>
+                </button>
+            </form>
+        </section>
+
+        <!-- SEZIONE 2: Area Inserimento Punti Manuale del Turno -->
+        <section id="turnSection" class="hidden bg-slate-900 rounded-2xl p-4 sm:p-6 border border-emerald-500/40 shadow-2xl relative overflow-hidden">
+            <div class="absolute -top-12 -right-12 w-36 h-36 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
+
+            <div class="flex flex-wrap items-center justify-between pb-4 border-b border-slate-800 gap-2">
+                <div>
+                    <span class="text-[11px] uppercase tracking-wider font-extrabold text-emerald-400 block">TURNO <span id="currentTurnNumber">#1</span> &bull; TOCCA A</span>
+                    <h2 id="activePlayerName" class="text-2xl sm:text-3xl font-black text-white">---</h2>
+                </div>
+                <div class="text-right bg-slate-950/80 px-4 py-2 rounded-xl border border-slate-800">
+                    <span class="text-[10px] uppercase text-slate-400 block font-semibold">Totale Attuale</span>
+                    <span id="activePlayerCurrentScore" class="text-2xl font-black font-mono-num text-amber-400">0</span>
+                    <span class="text-xs text-slate-500">pt</span>
+                </div>
+            </div>
+
+            <!-- Inserimento Punti Manuale -->
+            <div class="mt-4 space-y-4">
+                <div>
+                    <div class="flex justify-between items-center mb-1.5">
+                        <label class="text-xs font-semibold text-slate-300">Digita o incrementa i punti ottenuti nel turno:</label>
+                        <span class="text-[11px] text-amber-400 font-bold">Obiettivo: 5000 Esatti</span>
+                    </div>
+                    <div class="relative">
+                        <input 
+                            type="number" 
+                            id="turnScoreInput" 
+                            step="50" 
+                            min="0" 
+                            placeholder="Es. 100, 350, 500..." 
+                            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3.5 text-slate-100 font-mono-num text-2xl font-bold focus:outline-none focus:border-emerald-500 transition"
+                        >
+                        <button id="clearInputBtn" type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 p-2 text-base" title="Svuota campo">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Bottoni Rapidi Incremento -->
+                <div>
+                    <span class="text-[11px] text-slate-400 font-semibold block mb-1.5">Incremento rapido punti:</span>
+                    <div class="grid grid-cols-5 gap-1.5 sm:gap-2">
+                        <button type="button" class="quick-add-btn py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs sm:text-sm font-mono-num font-bold text-emerald-400 border border-slate-700 active:scale-95 transition" data-val="50">+50</button>
+                        <button type="button" class="quick-add-btn py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs sm:text-sm font-mono-num font-bold text-emerald-400 border border-slate-700 active:scale-95 transition" data-val="100">+100</button>
+                        <button type="button" class="quick-add-btn py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs sm:text-sm font-mono-num font-bold text-emerald-400 border border-slate-700 active:scale-95 transition" data-val="350">+350</button>
+                        <button type="button" class="quick-add-btn py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs sm:text-sm font-mono-num font-bold text-emerald-400 border border-slate-700 active:scale-95 transition" data-val="500">+500</button>
+                        <button type="button" class="quick-add-btn py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs sm:text-sm font-mono-num font-bold text-emerald-400 border border-slate-700 active:scale-95 transition" data-val="1000">+1000</button>
+                    </div>
+                </div>
+
+                <!-- Pulsanti Azione Principali -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                    <button 
+                        id="saveTurnBtn" 
+                        type="button" 
+                        class="py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm transition shadow-lg shadow-emerald-950 flex items-center justify-center space-x-2 active:scale-95"
+                    >
+                        <i class="fa-solid fa-check text-base"></i>
+                        <span>AGGIUNGI PUNTI & PASSA</span>
+                    </button>
+
+                    <button 
+                        id="farkleBtn" 
+                        type="button" 
+                        class="py-3.5 px-4 rounded-xl bg-slate-800 hover:bg-red-950/80 hover:text-red-200 hover:border-red-800 border border-slate-700 text-slate-300 font-bold text-sm transition flex items-center justify-center space-x-2 active:scale-95"
+                    >
+                        <i class="fa-solid fa-ban text-red-400"></i>
+                        <span>SBALLO (0 pt)</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SEZIONE 3: TABELLA DEI PUNTEGGI PER TURNI (STILE GRIGLIA) -->
+        <section class="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl overflow-hidden flex flex-col">
+            <div class="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/90">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-table-cells text-emerald-400"></i>
+                    <h3 class="font-bold text-base text-white">Tabella Griglia Turni</h3>
+                </div>
+                <div class="flex items-center space-x-3 text-xs">
+                    <div class="flex items-center space-x-1">
+                        <span class="w-2.5 h-2.5 rounded-full bg-red-600 border border-red-400"></span>
+                        <span class="text-slate-400">Penalità -500 pt</span>
+                    </div>
+                    <div class="flex items-center space-x-1">
+                        <span class="font-mono-num font-bold text-amber-400 bg-amber-950/50 px-2 py-0.5 rounded border border-amber-800/50">5000 Tondo</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stato Vuoto (Nessun Giocatore) -->
+            <div id="emptyPlayersState" class="p-10 text-center text-slate-500 space-y-3">
+                <i class="fa-solid fa-users text-5xl opacity-20"></i>
+                <p class="text-base font-semibold text-slate-400">Nessun giocatore inserito.</p>
+                <p class="text-xs text-slate-500 max-w-sm mx-auto">Inserisci i nomi dei giocatori nel campo in alto per avviare la partita.</p>
+            </div>
+
+            <!-- Tabella Scrollabile Stile Griglia -->
+            <div id="tableWrapper" class="hidden overflow-x-auto table-container">
+                <table class="w-full text-left border-collapse min-w-[550px]">
+                    <thead class="bg-slate-950/90 border-b-2 border-slate-800 text-xs">
+                        <tr>
+                            <th class="py-3 px-3 w-20 text-center text-slate-400 font-bold uppercase border-r border-slate-800 bg-slate-950 sticky left-0 z-10">Turno</th>
+                            <th id="playerHeaders" class="p-0" colspan="100">
+                                <!-- Nomi Giocatori generati dinamicamente -->
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="tableBody" class="divide-y divide-slate-800/80 font-mono-num text-xs">
+                        <!-- Righe generati dinamicamente -->
+                    </tbody>
+
+                    <tfoot class="bg-slate-950 border-t-2 border-slate-700 font-bold text-sm">
+                        <tr>
+                            <td class="py-3.5 px-3 text-center text-emerald-400 font-black border-r border-slate-800 bg-slate-950 sticky left-0 z-10">TOTALE</td>
+                            <td id="playerFooters" class="p-0" colspan="100">
+                                <!-- Totali generati dinamicamente -->
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </section>
+
+        <!-- SEZIONE 4: REGOLAMENTO COMPLETO IN BASSO -->
+        <section class="bg-slate-900 rounded-2xl border border-slate-800 p-5 sm:p-7 shadow-xl space-y-6 text-slate-300">
+            <div class="border-b border-slate-800 pb-4 flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 text-lg">
+                    <i class="fa-solid fa-book-open"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-extrabold text-white">Regolamento Completo e Penalità del 5000</h3>
+                    <p class="text-xs text-slate-400">Guida completa con la regola del 5000 tondo ed il meccanismo di penalizzazione</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs sm:text-sm leading-relaxed">
+                
+                <!-- 1. SCOPO DEL GIOCO -->
+                <div class="space-y-3 bg-slate-950/60 p-4 rounded-xl border border-slate-800/80">
+                    <h4 class="font-extrabold text-amber-400 text-sm flex items-center space-x-2">
+                        <i class="fa-solid fa-bullseye"></i>
+                        <span>1. Scopo del Gioco</span>
+                    </h4>
+                    <p class="text-slate-300">
+                        Si gioca con <strong>6 dadi classici a 6 facce</strong>. L'obiettivo è raggiungere per primo **ESATTAMENTE 5.000 PUNTI** (senza superarlo).
+                    </p>
+                </div>
+
+                <!-- 2. REGOLA DEL 5000 TONDO PER VINCERE -->
+                <div class="space-y-3 bg-amber-950/30 p-4 rounded-xl border border-amber-800/60">
+                    <h4 class="font-extrabold text-amber-400 text-sm flex items-center space-x-2">
+                        <i class="fa-solid fa-flag-checkered"></i>
+                        <span>2. Regola del Punteggio Tondo (5000 Esatti)</span>
+                    </h4>
+                    <p class="text-slate-200">
+                        Per vincere la partita occorre fare <strong>esattamente 5000 punti</strong>.
+                    </p>
+                    <div class="bg-amber-950/80 p-3 rounded-lg border border-amber-700/80 text-xs text-amber-200 space-y-1 font-medium">
+                        <p>🚫 <strong>Niente Sballo oltre i 5000:</strong> Non è possibile vincere superando 5000 punti (es. 5050 o 5100).</p>
+                        <p>⚠️ Se durante il turno fai un punteggio che ti porterebbe oltre i 5000 pt, <strong>il turno viene annullato (0 pt)</strong> e il tuo totale resta invariato in attesa del turno successivo.</p>
+                    </div>
+                </div>
+
+                <!-- 3. VALORE DADI E COMBINAZIONI BASE -->
+                <div class="space-y-3 bg-slate-950/60 p-4 rounded-xl border border-slate-800/80">
+                    <h4 class="font-extrabold text-emerald-400 text-sm flex items-center space-x-2">
+                        <i class="fa-solid fa-dice"></i>
+                        <span>3. Valore Dadi e Combinazioni Base</span>
+                    </h4>
+                    <ul class="space-y-1.5 text-slate-300">
+                        <li><strong class="text-emerald-300">Dado 1 singolo:</strong> 100 Punti</li>
+                        <li><strong class="text-emerald-300">Dado 5 singolo:</strong> 50 Punti</li>
+                        <li><strong class="text-emerald-300">Tris di 1:</strong> 1.000 Punti</li>
+                        <li><strong class="text-emerald-300">Tris di 2, 3, 4, 5, 6:</strong> $100 \times \text{valore}$ <span class="text-[11px] text-slate-400">(es. 3 tre = 300 pt; 3 sei = 600 pt)</span></li>
+                        <li><strong class="text-emerald-300">Poker / Cinquina / Sestina:</strong> Ogni dado oltre il tris raddoppia il valore del tris precedente.</li>
+                    </ul>
+                </div>
+
+                <!-- 4. COMBINAZIONI SPECIALI -->
+                <div class="space-y-3 bg-slate-950/60 p-4 rounded-xl border border-slate-800/80">
+                    <h4 class="font-extrabold text-teal-400 text-sm flex items-center space-x-2">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span>4. Combinazioni Speciali (Primo Lancio)</span>
+                    </h4>
+                    <ul class="space-y-1.5 text-slate-300">
+                        <li><strong class="text-teal-300">Scala Completa (1-2-3-4-5-6):</strong> 1.500 Punti</li>
+                        <li><strong class="text-teal-300">Tre Coppie:</strong> 750 Punti</li>
+                        <li><strong class="text-teal-300">Due Tris:</strong> Somma dei rispettivi tris</li>
+                        <li><strong class="text-teal-300">Dadi Caldi (Hot Dice):</strong> Se usi tutti e 6 i dadi per fare punti, puoi riprendere in mano tutti i 6 dadi e tirare ancora continuando ad accumulare punti nel medesimo turno.</li>
+                    </ul>
+                </div>
+
+                <!-- 5. REGOLA DELLA PENALITÀ 500 PUNTI PER RAGGIUNGIMENTO -->
+                <div class="space-y-3 bg-red-950/30 p-4 rounded-xl border border-red-800/60 md:col-span-2">
+                    <h4 class="font-extrabold text-red-400 text-sm flex items-center space-x-2">
+                        <i class="fa-solid fa-skull"></i>
+                        <span>5. Regola della Penalità di 500 Punti per Raggiungimento Esatto</span>
+                    </h4>
+                    <p class="text-slate-200">
+                        Questa è la caratteristica regola di penalizzazione del gioco:
+                    </p>
+                    <div class="bg-red-950/80 p-3.5 rounded-lg border border-red-700/80 text-xs text-red-100 font-medium space-y-1">
+                        <p>⚡ <strong>Raggiungimento:</strong> Quando un giocatore, sommando i punti del turno corrente, raggiunge l'ESATTO punteggio totale di un altro giocatore (con punteggio maggiore di 0)...</p>
+                        <p class="text-red-300 font-bold">👉 Il giocatore raggiunto PERDE IMMEDIATAMENTE 500 PUNTI (il suo totale scende di 500 pt, fino a un minimo di 0 pt).</p>
+                    </div>
+                    <p class="text-slate-300">
+                        Nella tabella dei punteggi della nostra app, la cella del giocatore penalizzato viene evidenziata in **ROSSO** con il badge <span class="text-red-400 font-bold font-mono-num">-500 PENALITÀ</span>.
+                    </p>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODALE CONFERMA NUOVA PARTITA -->
+    <div id="confirmResetModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl space-y-4">
+            <div class="w-14 h-14 rounded-2xl bg-red-950/80 border border-red-800 flex items-center justify-center text-red-400 text-2xl mx-auto">
+                <i class="fa-solid fa-power-off"></i>
+            </div>
+            <h3 class="text-xl font-black text-white">Avvia Nuova Partita?</h3>
+            <p class="text-xs text-slate-300 leading-relaxed">
+                Vuoi resettare completamente la sessione? <br>
+                <strong class="text-red-400">Questo eliminerà la lista di TUTTI i giocatori, i punteggi totali e la tabella della partita corrente.</strong>
+            </p>
+            <div class="grid grid-cols-2 gap-2.5 pt-2">
+                <button id="cancelResetBtn" class="py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition">
+                    Annulla
+                </button>
+                <button id="confirmResetBtn" class="py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs transition shadow-lg shadow-red-950">
+                    Sì, Nuova Partita
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE VITTORIA -->
+    <div id="victoryModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border-2 border-emerald-500 rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl space-y-4">
+            <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-amber-500 to-emerald-400 flex items-center justify-center text-slate-950 text-3xl mx-auto font-black shadow-lg shadow-emerald-950">
+                🏆
+            </div>
+            <h2 class="text-2xl font-black text-white">VITTORIA TONDA!</h2>
+            <p class="text-sm text-slate-300">
+                Complimenti a <strong id="winnerName" class="text-emerald-400 text-xl block my-1">---</strong>! <br>
+                Ha raggiunto perfettamente quota <span class="font-mono-num font-bold text-amber-400">5000</span> punti ed ha vinto la partita!
+            </p>
+            <button id="closeVictoryModalBtn" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition">
+                Chiudi
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // STATO GENERALE PARTITA
+        let state = {
+            players: [], // Array di { id, name, score, turns: [ { turnNum, pointsAdded, totalScore, wasPenalized, penalizerName, lossAmount, overflowed } ] }
+            activePlayerIndex: 0,
+            targetScore: 5000,
+            historyStack: []
+        };
+
+        // RIFERIMENTI DOM
+        const addPlayerForm = document.getElementById('addPlayerForm');
+        const newPlayerNameInput = document.getElementById('newPlayerName');
+        const turnSection = document.getElementById('turnSection');
+        const currentTurnNumber = document.getElementById('currentTurnNumber');
+        const activePlayerName = document.getElementById('activePlayerName');
+        const activePlayerCurrentScore = document.getElementById('activePlayerCurrentScore');
+        const turnScoreInput = document.getElementById('turnScoreInput');
+        const saveTurnBtn = document.getElementById('saveTurnBtn');
+        const farkleBtn = document.getElementById('farkleBtn');
+        const undoGlobalBtn = document.getElementById('undoGlobalBtn');
+        const openResetModalBtn = document.getElementById('openResetModalBtn');
+        const clearInputBtn = document.getElementById('clearInputBtn');
+        const emptyPlayersState = document.getElementById('emptyPlayersState');
+        const tableWrapper = document.getElementById('tableWrapper');
+        const playerHeaders = document.getElementById('playerHeaders');
+        const tableBody = document.getElementById('tableBody');
+        const playerFooters = document.getElementById('playerFooters');
+        
+        const alertBanner = document.getElementById('alertBanner');
+        const alertTitle = document.getElementById('alertTitle');
+        const alertMessage = document.getElementById('alertMessage');
+        const alertIcon = document.getElementById('alertIcon');
+
+        const victoryModal = document.getElementById('victoryModal');
+        const confirmResetModal = document.getElementById('confirmResetModal');
+        const cancelResetBtn = document.getElementById('cancelResetBtn');
+        const confirmResetBtn = document.getElementById('confirmResetBtn');
+
+        window.addEventListener('DOMContentLoaded', render);
+
+        // Aggiungi Giocatore
+        addPlayerForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = newPlayerNameInput.value.trim();
+            if (name) {
+                state.players.push({
+                    id: Date.now().toString() + Math.random().toString(36).substring(2, 5),
+                    name: name,
+                    score: 0,
+                    turns: []
+                });
+                newPlayerNameInput.value = '';
+                render();
+            }
+        });
+
+        // Pulsanti Incremento Rapido (+50, +100, +350, +500, +1000)
+        document.querySelectorAll('.quick-add-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const addVal = parseInt(btn.getAttribute('data-val'));
+                const currentVal = parseInt(turnScoreInput.value) || 0;
+                turnScoreInput.value = currentVal + addVal;
+            });
+        });
+
+        clearInputBtn.addEventListener('click', () => {
+            turnScoreInput.value = '';
+            turnScoreInput.focus();
+        });
+
+        // Bottone Conferma Punti
+        saveTurnBtn.addEventListener('click', () => {
+            const points = parseInt(turnScoreInput.value);
+            if (isNaN(points) || points <= 0) {
+                alert("Inserisci un punteggio numerico valido maggiore di 0 oppure seleziona 'SBALLO (0 pt)'.");
+                return;
+            }
+            processTurn(points);
+        });
+
+        // Bottone Sballo (0 pt)
+        farkleBtn.addEventListener('click', () => {
+            processTurn(0);
+        });
+
+        // LOGICA DI CALCOLO TURNO, SOGLIA 5000 TONDO E PENALITÀ -500 PT
+        function processTurn(pointsAdded) {
+            if (state.players.length === 0) return;
+
+            // Salva istantanea per la funzione Annulla Mossa (UNDO)
+            const snapshot = JSON.parse(JSON.stringify({
+                players: state.players,
+                activePlayerIndex: state.activePlayerIndex
+            }));
+            state.historyStack.push(snapshot);
+
+            const activePlayer = state.players[state.activePlayerIndex];
+            const proposedTotalScore = activePlayer.score + pointsAdded;
+            const currentRoundIndex = activePlayer.turns.length;
+
+            hideBanner();
+
+            // REQUISITO 2: CHIUSURA A 5000 TONDO
+            if (proposedTotalScore > state.targetScore) {
+                // SUPERATO 5000: TURNO NULLO / INVALIDO
+                activePlayer.turns.push({
+                    turnNum: currentRoundIndex + 1,
+                    pointsAdded: pointsAdded,
+                    totalScore: activePlayer.score, // Rimane al punteggio vecchio
+                    wasPenalized: false,
+                    penalizerName: null,
+                    lossAmount: 0,
+                    overflowed: true // Contrassegno superamento
+                });
+
+                showBanner(
+                    '⚠️ SUPERATO QUOTA 5000 (TURNO ANNULLATO)',
+                    `<strong>${escapeHtml(activePlayer.name)}</strong> ha fatto ${pointsAdded} pt andando a ${proposedTotalScore} pt! <br>Per vincere serve il <strong>5000 TONDO ESATTO</strong>. Il turno viene conteggiato 0 pt ed il totale resta <strong>${activePlayer.score} pt</strong>.`,
+                    'from-amber-950 via-amber-900 to-slate-900',
+                    'border-2 border-amber-500',
+                    'bg-amber-600',
+                    '⚠️'
+                );
+
+                finishTurnAdvance();
+                return;
+            }
+
+            // REQUISITO 3: PENALITÀ DEGLI ALTRI GIOCATORI SE RAGGIUNTI
+            let penaltyEvents = [];
+
+            if (proposedTotalScore > 0) {
+                state.players.forEach((otherPlayer, idx) => {
+                    if (idx !== state.activePlayerIndex && otherPlayer.score > 0 && otherPlayer.score === proposedTotalScore) {
+                        const oldScore = otherPlayer.score;
+                        const penalizedScore = Math.max(0, otherPlayer.score - 500);
+                        const loss = oldScore - penalizedScore;
+                        
+                        otherPlayer.score = penalizedScore;
+
+                        // Aggiorna la dicitura dell'ultimo turno registrato della vittima
+                        const victimLastTurn = otherPlayer.turns[currentRoundIndex] || otherPlayer.turns[otherPlayer.turns.length - 1];
+                        if (victimLastTurn) {
+                            victimLastTurn.wasPenalized = true;
+                            victimLastTurn.lossAmount = loss;
+                            victimLastTurn.penalizerName = activePlayer.name;
+                            victimLastTurn.totalScore = penalizedScore;
+                        }
+
+                        penaltyEvents.push({
+                            victimName: otherPlayer.name,
+                            attackerName: activePlayer.name,
+                            loss: loss
+                        });
+                    }
+                });
+            }
+
+            // Aggiorna punteggio normale
+            activePlayer.score = proposedTotalScore;
+            activePlayer.turns.push({
+                turnNum: currentRoundIndex + 1,
+                pointsAdded: pointsAdded,
+                totalScore: activePlayer.score,
+                wasPenalized: false,
+                penalizerName: null,
+                lossAmount: 0,
+                overflowed: false
+            });
+
+            // Se ci sono state penalità, genera il banner rosso
+            if (penaltyEvents.length > 0) {
+                const msg = penaltyEvents.map(e => `⚡ <strong>${escapeHtml(e.attackerName)}</strong> ha raggiunto <strong>${escapeHtml(e.victimName)}</strong>! <br><strong>${escapeHtml(e.victimName)}</strong> subisce la penalità e PERDE <strong>${e.loss} PUNTI</strong>!`).join('<br>');
+                showBanner(
+                    '⚡ PENALITÀ RAGGIUNGIMENTO (-500 PT)',
+                    msg,
+                    'from-red-950 via-rose-900 to-amber-950',
+                    'border-2 border-red-500 animate-bounce',
+                    'bg-red-600',
+                    '⚡'
+                );
+            }
+
+            // RAGGIUNGIMENTO ESATTO DEI 5000 PT -> VITTORIA
+            if (activePlayer.score === state.targetScore) {
+                showVictory(activePlayer);
+            }
+
+            finishTurnAdvance();
+        }
+
+        function finishTurnAdvance() {
+            turnScoreInput.value = '';
+            state.activePlayerIndex = (state.activePlayerIndex + 1) % state.players.length;
+            render();
+        }
+
+        // MOSTRA/NASCONDI BANNER AVVISI
+        function showBanner(title, message, gradientClass, borderClass, iconBgClass, iconText) {
+            alertTitle.textContent = title;
+            alertMessage.innerHTML = message;
+            alertIcon.className = `w-11 h-11 rounded-full flex items-center justify-center text-white text-2xl shrink-0 shadow-lg ${iconBgClass}`;
+            alertIcon.textContent = iconText;
+            alertBanner.className = `rounded-2xl p-4 shadow-2xl bg-gradient-to-r ${gradientClass} ${borderClass}`;
+            alertBanner.classList.remove('hidden');
+        }
+
+        function hideBanner() {
+            alertBanner.classList.add('hidden');
+        }
+
+        // Annulla Mossa (UNDO)
+        undoGlobalBtn.addEventListener('click', () => {
+            if (state.historyStack.length === 0) {
+                alert("Nessuna mossa da annullare.");
+                return;
+            }
+
+            const previousState = state.historyStack.pop();
+            state.players = previousState.players;
+            state.activePlayerIndex = previousState.activePlayerIndex;
+            hideBanner();
+            render();
+        });
+
+        // NUOVA PARTITA (RESET COMPLETO REQUISITO 1)
+        openResetModalBtn.addEventListener('click', () => {
+            confirmResetModal.classList.remove('hidden');
+        });
+
+        cancelResetBtn.addEventListener('click', () => {
+            confirmResetModal.classList.add('hidden');
+        });
+
+        confirmResetBtn.addEventListener('click', () => {
+            confirmResetModal.classList.add('hidden');
+            
+            // AZZERAMENTO COMPLETO STATO
+            state = {
+                players: [],
+                activePlayerIndex: 0,
+                targetScore: 5000,
+                historyStack: []
+            };
+
+            turnScoreInput.value = '';
+            newPlayerNameInput.value = '';
+            hideBanner();
+            victoryModal.classList.add('hidden');
+            
+            render();
+        });
+
+        // Rimuovi singolo giocatore prima della partita
+        function removePlayer(id) {
+            state.players = state.players.filter(p => p.id !== id);
+            if (state.activePlayerIndex >= state.players.length) {
+                state.activePlayerIndex = 0;
+            }
+            render();
+        }
+
+        // Finestra Vittoria
+        function showVictory(player) {
+            document.getElementById('winnerName').textContent = player.name;
+            victoryModal.classList.remove('hidden');
+
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 180,
+                    spread: 100,
+                    origin: { y: 0.6 }
+                });
+            }
+        }
+
+        document.getElementById('closeVictoryModalBtn').addEventListener('click', () => {
+            victoryModal.classList.add('hidden');
+        });
+
+        // GENERAZIONE ED AGGIORNAMENTO DELL'INTERFACCIA E DELLA TABELLA
+        function render() {
+            if (state.players.length === 0) {
+                turnSection.classList.add('hidden');
+                tableWrapper.classList.add('hidden');
+                emptyPlayersState.classList.remove('hidden');
+                return;
+            }
+
+            emptyPlayersState.classList.add('hidden');
+            turnSection.classList.remove('hidden');
+            tableWrapper.classList.remove('hidden');
+
+            // 1. Numero Turno
+            const maxTurns = Math.max(...state.players.map(p => p.turns.length), 0);
+            currentTurnNumber.textContent = `#${maxTurns + 1}`;
+
+            // 2. Giocatore Attivo
+            const activePlayer = state.players[state.activePlayerIndex];
+            activePlayerName.textContent = activePlayer ? activePlayer.name : '---';
+            activePlayerCurrentScore.textContent = activePlayer ? activePlayer.score.toLocaleString('it-IT') : '0';
+
+            // 3. Colonne Nomi Giocatori Tabella
+            playerHeaders.innerHTML = `
+                <div class="grid" style="grid-template-columns: repeat(${state.players.length}, minmax(130px, 1fr));">
+                    ${state.players.map((p, idx) => {
+                        const isActive = idx === state.activePlayerIndex;
+                        return `
+                            <div class="py-2.5 px-3 border-r border-slate-800 flex items-center justify-between ${isActive ? 'bg-emerald-950/80 text-emerald-300 font-extrabold border-b-2 border-b-emerald-400' : 'text-slate-300'}">
+                                <div class="truncate mr-1 flex items-center space-x-1.5">
+                                    ${isActive ? '<span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0"></span>' : ''}
+                                    <span class="truncate">${escapeHtml(p.name)}</span>
+                                </div>
+                                <button onclick="removePlayer('${p.id}')" class="text-slate-600 hover:text-red-400 transition p-1" title="Rimuovi">
+                                    <i class="fa-solid fa-xmark text-xs"></i>
+                                </button>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+
+            // 4. Righe della Tabella (Progressivo Turno per Turno)
+            let bodyHTML = '';
+            const totalRoundsToDisplay = Math.max(maxTurns, 1);
+
+            for (let r = 0; r < totalRoundsToDisplay; r++) {
+                bodyHTML += `
+                    <tr class="${r % 2 === 0 ? 'bg-slate-900/40' : 'bg-slate-950/40'} hover:bg-slate-800/40 transition">
+                        <td class="py-3 px-3 text-center text-slate-400 font-bold border-r border-slate-800 bg-slate-950/90 sticky left-0 z-10">
+                            #${r + 1}
+                        </td>
+                        <td class="p-0" colspan="100">
+                            <div class="grid" style="grid-template-columns: repeat(${state.players.length}, minmax(130px, 1fr));">
+                                ${state.players.map((p) => {
+                                    const turnData = p.turns[r];
+                                    
+                                    if (!turnData) {
+                                        return `<div class="py-3 px-3 border-r border-slate-800/60 text-slate-700 text-center italic">-</div>`;
+                                    }
+
+                                    const isFarkle = turnData.pointsAdded === 0;
+                                    const hasPenalty = turnData.wasPenalized;
+                                    const overflowed = turnData.overflowed;
+
+                                    if (hasPenalty) {
+                                        // PENALITÀ -500 PT EVIDENZIATA IN ROSSO
+                                        return `
+                                            <div class="py-2 px-2.5 border-r border-slate-800/60 penalty-card border-2 border-red-500 rounded-md m-0.5 shadow-inner">
+                                                <div class="flex items-center justify-between">
+                                                    <span class="text-[9px] font-black text-red-200 uppercase tracking-tighter bg-red-900/90 px-1 py-0.5 rounded">
+                                                        -500 PENALITÀ
+                                                    </span>
+                                                    <span class="text-xs font-bold text-red-300 font-mono-num">
+                                                        +${turnData.pointsAdded}
+                                                    </span>
+                                                </div>
+                                                <div class="text-right mt-1">
+                                                    <span class="text-sm font-black text-red-100 font-mono-num">
+                                                        ${turnData.totalScore} pt
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        `;
+                                    } else if (overflowed) {
+                                        // SUPERAMENTO 5000 (TURNO INVALIDO)
+                                        return `
+                                            <div class="py-2 px-2.5 border-r border-slate-800/60 bg-amber-950/40 border border-amber-600/60 rounded-md m-0.5">
+                                                <div class="flex items-center justify-between text-[10px]">
+                                                    <span class="font-bold text-amber-400">SUPERATO</span>
+                                                    <span class="line-through text-slate-500 font-mono-num">+${turnData.pointsAdded}</span>
+                                                </div>
+                                                <div class="text-right mt-0.5">
+                                                    <span class="text-xs font-bold text-amber-300 font-mono-num">${turnData.totalScore} pt</span>
+                                                </div>
+                                            </div>
+                                        `;
+                                    } else {
+                                        // TURNO NORMALE O SBALLO
+                                        return `
+                                            <div class="py-3 px-3 border-r border-slate-800/60 flex items-center justify-between">
+                                                <span class="${isFarkle ? 'text-red-400 font-bold' : 'text-slate-400 text-[11px]'} font-mono-num">
+                                                    ${isFarkle ? 'SBALLO' : '+' + turnData.pointsAdded}
+                                                </span>
+                                                <span class="text-xs font-black text-amber-300 font-mono-num">
+                                                    ${turnData.totalScore} <span class="text-[10px] font-normal text-slate-500">pt</span>
+                                                </span>
+                                            </div>
+                                        `;
+                                    }
+                                }).join('')}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+
+            tableBody.innerHTML = bodyHTML;
+
+            // 5. Totali in Fondo
+            playerFooters.innerHTML = `
+                <div class="grid" style="grid-template-columns: repeat(${state.players.length}, minmax(130px, 1fr));">
+                    ${state.players.map((p) => {
+                        return `
+                            <div class="py-3.5 px-3 border-r border-slate-800 font-mono-num text-amber-400 font-black text-base">
+                                ${p.score.toLocaleString('it-IT')} <span class="text-xs text-slate-500 font-medium">pt</span>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/[&<>"']/g, function(m) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+            });
+        }
+    </script>
+</body>
+</html>
