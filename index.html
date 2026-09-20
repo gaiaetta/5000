@@ -3,26 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Segnapunti Segna 5000</title>
+  <title>F1 Grand Prix Scoreboard</title>
   <style>
     :root {
-      --bg-color: #f4f6f9;
-      --card-bg: #ffffff;
-      --primary: #2563eb;
-      --primary-hover: #1d4ed8;
-      --accent: #16a34a;
-      --danger: #dc2626;
-      --warning: #d97706;
-      --text: #1f2937;
-      --border: #e5e7eb;
+      --bg-color: #0f1015;
+      --card-bg: #1a1c23;
+      --accent-red: #e10600;
+      --text-main: #ffffff;
+      --text-muted: #a0a5b5;
+      --border-color: #2a2d37;
     }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: var(--bg-color);
-      color: var(--text);
+      color: var(--text-main);
       margin: 0;
-      padding: 16px;
+      padding: 20px;
       display: flex;
       justify-content: center;
     }
@@ -30,441 +27,232 @@
     .container {
       width: 100%;
       max-width: 600px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
+    }
+
+    h1 {
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 24px;
+      font-size: 1.5rem;
+      border-bottom: 3px solid var(--accent-red);
+      padding-bottom: 8px;
     }
 
     .card {
       background: var(--card-bg);
       border-radius: 12px;
-      padding: 16px;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 1px solid var(--border-color);
     }
 
-    h1, h2, h3 {
-      margin-top: 0;
-      margin-bottom: 12px;
-    }
-
-    .rules-card {
-      background-color: #eff6ff;
-      border-left: 4px solid var(--primary);
-      font-size: 0.9rem;
-      line-height: 1.4;
-    }
-
-    .rules-card ul {
-      margin: 0;
-      padding-left: 20px;
-    }
-
-    .input-group {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-
-    input[type="text"], input[type="number"] {
-      flex: 1;
-      padding: 10px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      font-size: 1rem;
-    }
-
-    button {
-      background-color: var(--primary);
-      color: white;
-      border: none;
-      border-radius: 6px;
-      padding: 10px 16px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-
-    button:hover {
-      background-color: var(--primary-hover);
-    }
-
-    button.secondary {
-      background-color: #6b7280;
-    }
-    button.secondary:hover {
-      background-color: #4b5563;
-    }
-
-    button.danger {
-      background-color: var(--danger);
-    }
-
-    .player-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .player-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px;
-      border: 2px solid var(--border);
-      border-radius: 8px;
-      background: var(--card-bg);
-    }
-
-    .player-item.active {
-      border-color: var(--primary);
-      background-color: #f0fdf4;
-    }
-
-    .player-name {
-      font-weight: 600;
-      font-size: 1.1rem;
-    }
-
-    .player-score {
-      font-size: 1.2rem;
-      font-weight: 700;
-      color: var(--primary);
-    }
-
-    .notification {
-      position: fixed;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: #fef2f2;
-      border: 2px solid var(--danger);
-      color: var(--danger);
-      padding: 16px 24px;
-      border-radius: 8px;
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-      z-index: 100;
-      display: none;
-      text-align: center;
-      font-weight: bold;
-      animation: popIn 0.3s ease-out;
-    }
-
-    .notification.warning-theme {
-      background-color: #fffbeeb;
-      border-color: var(--warning);
-      color: #92400e;
-    }
-
-    @keyframes popIn {
-      0% { transform: translate(-50%, -20px); opacity: 0; }
-      100% { transform: translate(-50%, 0); opacity: 1; }
-    }
-
-    .badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 12px;
-      font-size: 0.75rem;
-      font-weight: bold;
-      margin-left: 8px;
-    }
-    .badge-danger { background-color: #fee2e2; color: #991b1b; }
-    .badge-success { background-color: #dcfce7; color: #166534; }
-
-    .current-turn {
-      text-align: center;
-    }
-
-    .turn-controls {
+    .form-group {
       display: flex;
       flex-direction: column;
       gap: 12px;
-      margin-top: 12px;
     }
 
-    .score-buttons {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
+    label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 600;
     }
 
-    .score-buttons button {
-      background-color: #e0e7ff;
-      color: #3730a3;
+    input, select, button {
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background-color: #0f1015;
+      color: var(--text-main);
+      font-size: 1rem;
+      outline: none;
     }
 
-    .score-buttons button:hover {
-      background-color: #c7d2fe;
+    input:focus, select:focus {
+      border-color: var(--accent-red);
     }
 
-    #finalTurnBanner {
-      display: none;
-      background-color: #fef3c7;
-      border: 1px solid #f59e0b;
-      color: #92400e;
-      padding: 8px 12px;
-      border-radius: 6px;
-      text-align: center;
+    button.btn-add {
+      background-color: var(--accent-red);
+      color: #fff;
       font-weight: bold;
-      margin-bottom: 12px;
+      border: none;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: opacity 0.2s;
+    }
+
+    button.btn-add:hover {
+      opacity: 0.9;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .checkbox-group input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent-red);
+    }
+
+    .standings-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .standing-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: var(--card-bg);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    .rank {
+      font-weight: bold;
+      font-size: 1.1rem;
+      width: 30px;
+      color: var(--accent-red);
+    }
+
+    .driver-name {
+      flex: 1;
+      font-weight: 600;
+    }
+
+    .points {
+      font-weight: bold;
+      font-size: 1.1rem;
+      background: #252833;
+      padding: 4px 12px;
+      border-radius: 20px;
     }
   </style>
 </head>
 <body>
 
-  <div id="popupNotification" class="notification"></div>
-
   <div class="container">
-    <h1>Segnapunti - 5000</h1>
+    <h1>🏆 Classifica F1</h1>
 
-    <!-- Regole del gioco -->
-    <div class="card rules-card">
-      <h3>Scopo del gioco</h3>
-      <p>Si gioca con <strong>5 dadi</strong>. Vince il primo giocatore che raggiunge <strong>5.000 punti</strong> senza essere superato nel giro finale.</p>
-      <ul>
-        <li><strong>Sorpasso:</strong> Se raggiungi il punteggio esatto di un altro giocatore, quest'ultimo perde 500 punti!</li>
-        <li><strong>Giro Finale:</strong> Quando un giocatore raggiunge o supera 5.000 punti, parte il giro finale. Gli altri giocatori hanno 1 ultimo turno per tentare di superarlo. Se un altro giocatore lo supera, il giro finale riparte con il nuovo punteggio da battere!</li>
+    <!-- Form Inserimento Risultati -->
+    <div class="card">
+      <div class="form-group">
+        <label for="driverSelect">Pilota</label>
+        <select id="driverSelect">
+          <option value="Max Verstappen">Max Verstappen</option>
+          <option value="Charles Leclerc">Charles Leclerc</option>
+          <option value="Lando Norris">Lando Norris</option>
+          <option value="Lewis Hamilton">Lewis Hamilton</option>
+          <option value="Oscar Piastri">Oscar Piastri</option>
+          <option value="Carlos Sainz">Carlos Sainz</option>
+          <option value="George Russell">George Russell</option>
+        </select>
+
+        <label for="positionSelect">Posizione Arrivo Gara</label>
+        <select id="positionSelect">
+          <option value="1">1° Posto (25 pt)</option>
+          <option value="2">2° Posto (18 pt)</option>
+          <option value="3">3° Posto (15 pt)</option>
+          <option value="4">4° Posto (12 pt)</option>
+          <option value="5">5° Posto (10 pt)</option>
+          <option value="6">6° Posto (8 pt)</option>
+          <option value="7">7° Posto (6 pt)</option>
+          <option value="8">8° Posto (4 pt)</option>
+          <option value="9">9° Posto (2 pt)</option>
+          <option value="10">10° Posto (1 pt)</option>
+          <option value="11">Fuori dai primi 10 (0 pt)</option>
+        </select>
+
+        <label class="checkbox-group">
+          <input type="checkbox" id="fastestLapCheck">
+          <span>Giro Più Veloce (+1 pt se in top 10)</span>
+        </label>
+
+        <button class="btn-add" onclick="addPoints()">Aggiungi Punti</button>
+      </div>
+    </div>
+
+    <!-- Classifica Generale -->
+    <div class="card">
+      <ul class="standings-list" id="standingsList">
+        <!-- Generato dinamicamente con JS -->
       </ul>
-    </div>
-
-    <!-- Registrazione Giocatori -->
-    <div id="setupSection" class="card">
-      <h2>Aggiungi Giocatori</h2>
-      <div class="input-group">
-        <input type="text" id="playerNameInput" placeholder="Nome Giocatore">
-        <button id="addPlayerBtn">Aggiungi</button>
-      </div>
-      <div id="playersSetupList" style="margin-bottom: 12px;"></div>
-      <button id="startGameBtn" style="width: 100%;" disabled>Inizia Partita</button>
-    </div>
-
-    <!-- Area di Gioco -->
-    <div id="gameSection" class="card" style="display: none;">
-      
-      <div id="finalTurnBanner">
-        🚨 GIRO FINALE IN CORSO! Target: <span id="targetScoreText">5000</span> pt
-      </div>
-
-      <div class="current-turn">
-        <h3>Turno di: <span id="activePlayerName" style="color: var(--primary);"></span></h3>
-        <p>Punteggio attuale: <span id="activePlayerScore">0</span></p>
-      </div>
-
-      <div class="turn-controls">
-        <div class="input-group">
-          <input type="number" id="scoreInput" placeholder="Punti realizzati nel turno" step="50" min="0">
-          <button id="addScoreBtn">Aggiungi</button>
-        </div>
-
-        <button id="zeroTurnBtn" class="secondary">Punti 0 (Passa)</button>
-      </div>
-    </div>
-
-    <!-- Classifica -->
-    <div id="scoreboardSection" class="card" style="display: none;">
-      <h2>Classifica</h2>
-      <div id="scoreboardList" class="player-list"></div>
-      <button id="resetGameBtn" class="danger" style="margin-top: 16px; width: 100%;">Nuova Partita</button>
     </div>
   </div>
 
   <script>
-    // Stato del gioco
-    let players = [];
-    let currentPlayerIndex = 0;
-    let gameStarted = false;
-    
-    // Gestione Giro Finale
-    let isFinalRound = false;
-    let finalRoundTriggerPlayerId = null; // ID di chi ha attivato il giro finale
-    let targetScore = 5000;
+    // Tabella Punti F1 Standard
+    const f1PointsTable = {
+      1: 25, 2: 18, 3: 15, 4: 12, 5: 10,
+      6: 8,  7: 6,  8: 4,  9: 2,  10: 1
+    };
 
-    // Elementi DOM
-    const playerNameInput = document.getElementById('playerNameInput');
-    const addPlayerBtn = document.getElementById('addPlayerBtn');
-    const playersSetupList = document.getElementById('playersSetupList');
-    const startGameBtn = document.getElementById('startGameBtn');
-    const setupSection = document.getElementById('setupSection');
-    const gameSection = document.getElementById('gameSection');
-    const scoreboardSection = document.getElementById('scoreboardSection');
-    const activePlayerName = document.getElementById('activePlayerName');
-    const activePlayerScore = document.getElementById('activePlayerScore');
-    const scoreInput = document.getElementById('scoreInput');
-    const addScoreBtn = document.getElementById('addScoreBtn');
-    const zeroTurnBtn = document.getElementById('zeroTurnBtn');
-    const scoreboardList = document.getElementById('scoreboardList');
-    const resetGameBtn = document.getElementById('resetGameBtn');
-    const popupNotification = document.getElementById('popupNotification');
-    const finalTurnBanner = document.getElementById('finalTurnBanner');
-    const targetScoreText = document.getElementById('targetScoreText');
+    // Inizializzazione Dati (o da localStorage)
+    let drivers = JSON.parse(localStorage.getItem('f1_standings')) || [
+      { name: 'Max Verstappen', points: 0 },
+      { name: 'Charles Leclerc', points: 0 },
+      { name: 'Lando Norris', points: 0 },
+      { name: 'Lewis Hamilton', points: 0 },
+      { name: 'Oscar Piastri', points: 0 },
+      { name: 'Carlos Sainz', points: 0 },
+      { name: 'George Russell', points: 0 }
+    ];
 
-    // Aggiungi Giocatore
-    addPlayerBtn.addEventListener('click', () => {
-      const name = playerNameInput.value.trim();
-      if (name) {
-        players.push({
-          id: Date.now() + Math.random(),
-          name: name,
-          score: 0
-        });
-        playerNameInput.value = '';
-        renderSetupList();
-      }
-    });
+    function renderStandings() {
+      // Ordina per punti decrescenti
+      drivers.sort((a, b) => b.points - a.points);
 
-    function renderSetupList() {
-      playersSetupList.innerHTML = players.map(p => `<div>• ${p.name}</div>`).join('');
-      startGameBtn.disabled = players.length < 2;
-    }
+      const listEl = document.getElementById('standingsList');
+      listEl.innerHTML = '';
 
-    // Inizia Partita
-    startGameBtn.addEventListener('click', () => {
-      if (players.length >= 2) {
-        gameStarted = true;
-        setupSection.style.display = 'none';
-        gameSection.style.display = 'block';
-        scoreboardSection.style.display = 'block';
-        updateTurnDisplay();
-        renderScoreboard();
-      }
-    });
-
-    // Mostra Pop-up
-    function showPopup(message, isWarning = false) {
-      popupNotification.innerText = message;
-      if (isWarning) {
-        popupNotification.classList.add('warning-theme');
-      } else {
-        popupNotification.classList.remove('warning-theme');
-      }
-      popupNotification.style.display = 'block';
-
-      setTimeout(() => {
-        popupNotification.style.display = 'none';
-      }, 3500);
-    }
-
-    // Aggiungi Punti
-    addScoreBtn.addEventListener('click', () => {
-      const points = parseInt(scoreInput.value) || 0;
-      processTurn(points);
-      scoreInput.value = '';
-    });
-
-    zeroTurnBtn.addEventListener('click', () => {
-      processTurn(0);
-    });
-
-    function processTurn(points) {
-      const currentPlayer = players[currentPlayerIndex];
-      const oldScore = currentPlayer.score;
-      const newScore = oldScore + points;
-
-      currentPlayer.score = newScore;
-
-      // Verifica Sorpasso / Presa (-500 punti)
-      if (points > 0) {
-        players.forEach(p => {
-          if (p.id !== currentPlayer.id && p.score === newScore && newScore > 0) {
-            p.score = Math.max(0, p.score - 500);
-            showPopup(`🚨 ${currentPlayer.name} ha raggiunto ${p.name}! ${p.name} perde 500 punti!`);
-          }
-        });
-      }
-
-      // Verifica Raggiungimento / Superamento 5000 punti per Giro Finale
-      if (currentPlayer.score >= 5000) {
-        if (!isFinalRound) {
-          // Attivazione Primo Giro Finale
-          isFinalRound = true;
-          finalRoundTriggerPlayerId = currentPlayer.id;
-          targetScore = currentPlayer.score;
-          
-          showPopup(`🏁 GIRO FINALE! ${currentPlayer.name} ha raggiunto ${currentPlayer.score} punti! Ultima chance per gli altri!`, true);
-        } else if (currentPlayer.id !== finalRoundTriggerPlayerId && currentPlayer.score >= targetScore) {
-          // Un altro giocatore ha pareggiato o superato il target durante il giro finale
-          finalRoundTriggerPlayerId = currentPlayer.id;
-          targetScore = currentPlayer.score;
-          
-          showPopup(`🔥 NUOVO TARGET! ${currentPlayer.name} ha raggiunto ${currentPlayer.score} punti! Il Giro Finale riparte!`, true);
-        }
-      }
-
-      // Avanzamento Turno
-      advanceTurn();
-    }
-
-    function advanceTurn() {
-      let nextIndex = (currentPlayerIndex + 1) % players.length;
-
-      // Se siamo nel giro finale e siamo ritornati al giocatore che ha avviato il giro finale
-      if (isFinalRound && players[nextIndex].id === finalRoundTriggerPlayerId) {
-        // Nessuno è riuscito a superarlo/raggiungerlo di più: IL GIOCATORE HA VINTO!
-        const winner = players.find(p => p.id === finalRoundTriggerPlayerId);
-        alert(`🏆 COMPLIMENTI! ${winner.name} vince la partita con ${winner.score} punti!`);
-        resetGame();
-        return;
-      }
-
-      currentPlayerIndex = nextIndex;
-      updateTurnDisplay();
-      renderScoreboard();
-    }
-
-    function updateTurnDisplay() {
-      const activePlayer = players[currentPlayerIndex];
-      activePlayerName.innerText = activePlayer.name;
-      activePlayerScore.innerText = activePlayer.score;
-
-      if (isFinalRound) {
-        finalTurnBanner.style.display = 'block';
-        targetScoreText.innerText = targetScore;
-      } else {
-        finalTurnBanner.style.display = 'none';
-      }
-    }
-
-    function renderScoreboard() {
-      // Ordina per punteggio decrescente
-      const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
-
-      scoreboardList.innerHTML = sortedPlayers.map(p => {
-        const isActive = players[currentPlayerIndex].id === p.id;
-        const isTargetPlayer = isFinalRound && p.id === finalRoundTriggerPlayerId;
-
-        return `
-          <div class="player-item ${isActive ? 'active' : ''}">
-            <div>
-              <span class="player-name">${p.name}</span>
-              ${isActive ? '<span class="badge badge-success">In Turno</span>' : ''}
-              ${isTargetPlayer ? '<span class="badge badge-danger">Leader da Battere</span>' : ''}
-            </div>
-            <div class="player-score">${p.score} pt</div>
-          </div>
+      drivers.forEach((driver, index) => {
+        const li = document.createElement('li');
+        li.className = 'standing-item';
+        li.innerHTML = `
+          <span class="rank">${index + 1}</span>
+          <span class="driver-name">${driver.name}</span>
+          <span class="points">${driver.points} PTS</span>
         `;
-      }).join('');
+        listEl.appendChild(li);
+      });
+
+      // Salva nei dati locali
+      localStorage.setItem('f1_standings', JSON.stringify(drivers));
     }
 
-    function resetGame() {
-      players = [];
-      currentPlayerIndex = 0;
-      gameStarted = false;
-      isFinalRound = false;
-      finalRoundTriggerPlayerId = null;
-      targetScore = 5000;
+    function addPoints() {
+      const selectedName = document.getElementById('driverSelect').value;
+      const position = parseInt(document.getElementById('positionSelect').value);
+      const hasFastestLap = document.getElementById('fastestLapCheck').checked;
 
-      setupSection.style.display = 'block';
-      gameSection.style.display = 'none';
-      scoreboardSection.style.display = 'none';
-      renderSetupList();
-    }
+      let pts = f1PointsTable[position] || 0;
 
-    resetGameBtn.addEventListener('click', () => {
-      if (confirm('Sei sicuro di voler iniziare una nuova partita? Tutti i punteggi verranno azzerati.')) {
-        resetGame();
+      // Giro veloce assegna 1 pt solo se il pilota finisce nei primi 10
+      if (hasFastestLap && position <= 10) {
+        pts += 1;
       }
-    });
+
+      const driver = drivers.find(d => d.name === selectedName);
+      if (driver) {
+        driver.points += pts;
+        renderStandings();
+        // Reset checkbox
+        document.getElementById('fastestLapCheck').checked = false;
+      }
+    }
+
+    // Primo render all'avvio
+    renderStandings();
   </script>
 </body>
 </html>
