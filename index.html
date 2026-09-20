@@ -326,8 +326,8 @@
                     <ul class="space-y-1.5 text-slate-300">
                         <li><strong class="text-emerald-300">Dado 1 singolo:</strong> 100 Punti | <strong class="text-emerald-300">Dado 5 singolo:</strong> 50 Punti</li>
                         <li><strong class="text-emerald-300">Tris di 1:</strong> 1.000 Punti</li>
-                        <li><strong class="text-emerald-300">Tris di 2, 3, 4, 5, 6:</strong> $100 \times \text{valore}$ (es. tre 2 = 200, tre 3 = 300, tre 6 = 600 pt)</li>
-                        <li><strong class="text-emerald-300">Dadi Extra oltre il Tris:</strong> Ogni dado uguale aggiuntivo al tris apporta <strong>+100 Punti extra</strong> (es. 4 dadi da 6 = 700 pt; 5 dadi da 6 = 800 pt).</li>
+                        <li><strong class="text-emerald-300">Tris di 2, 3, 4, 5, 6:</strong> Valore del dado × 100 (es. tre 2 = 200 pt, tre 3 = 300 pt, tre 4 = 400 pt, tre 5 = 500 pt, tre 6 = 600 pt)</li>
+                        <li><strong class="text-emerald-300">Dadi Extra oltre il Tris:</strong> Ogni dado uguale aggiuntivo oltre il tris aggiunge <strong>+100 Punti extra</strong> (es. quattro 6 = 700 pt; cinque 6 = 800 pt).</li>
                     </ul>
                 </div>
 
@@ -641,12 +641,11 @@
         confirmMidGameAddBtn.addEventListener('click', () => {
             const name = midGamePlayerNameInput.value.trim();
             if (name) {
-                // Salva Snapshot per Undo
                 saveSnapshot();
 
                 const maxTurns = Math.max(...state.players.map(p => p.turns.length), 0);
                 const dummyTurns = [];
-                for(let i=0; i<maxTurns; i++) {
+                for(let i = 0; i < maxTurns; i++) {
                     dummyTurns.push({
                         turnNum: i + 1,
                         pointsAdded: 0,
@@ -797,7 +796,6 @@
 
             // 3. ATTIVAZIONE DEL GIRO FINALE
             if (activePlayer.score === state.targetScore && !state.isFinalRound) {
-                // Se è solo un giocatore, vince subito
                 if (state.players.length === 1) {
                     triggerVictory(activePlayer);
                     finishTurnAdvance();
@@ -830,10 +828,13 @@
                 const leaders = state.players.filter(p => p.score === maxScore && p.score >= state.targetScore);
 
                 if (leaders.length === 1) {
+                    // Un solo vincitore (es. chi ha iniziato il giro finale se nessuno l'ha superato)
                     triggerVictory(leaders[0]);
                 } else if (leaders.length > 1) {
+                    // Parità tra più giocatori a 5000: si prosegue con un nuovo giro finale
                     state.finalRoundFirstPlayerIndex = nextPlayerIndex;
                 } else {
+                    // Nessuno è a 5000+ (es. a causa di penalità subite): il giro finale si annulla
                     state.isFinalRound = false;
                     state.finalRoundFirstPlayerIndex = null;
                 }
