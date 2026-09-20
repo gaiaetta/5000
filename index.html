@@ -1,261 +1,496 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="it" class="h-full">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>F1 Grand Prix Scoreboard</title>
-  <style>
-    :root {
-      --bg-color: #0f1015;
-      --card-bg: #1a1c23;
-      --accent-red: #e10600;
-      --text-main: #ffffff;
-      --text-muted: #a0a5b5;
-      --border-color: #2a2d37;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Segnapunti 5000 - Gioco dei Dadi</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- JS Confetti per la vittoria -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            touch-action: manipulation;
+        }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-main);
-      margin: 0;
-      padding: 20px;
-      display: flex;
-      justify-content: center;
-    }
+        .font-mono-num {
+            font-family: 'JetBrains Mono', monospace;
+        }
 
-    .container {
-      width: 100%;
-      max-width: 600px;
-    }
+        /* Personalizzazione scrollbar della tabella */
+        .table-container::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+        .table-container::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        .table-container::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
 
-    h1 {
-      text-align: center;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 24px;
-      font-size: 1.5rem;
-      border-bottom: 3px solid var(--accent-red);
-      padding-bottom: 8px;
-    }
+        /* Animazioni di pulsazione per le modali ed evidenziazioni */
+        @keyframes pulse-red {
+            0%, 100% { border-color: rgba(239, 68, 68, 0.9); background-color: rgba(127, 29, 29, 0.45); }
+            50% { border-color: rgba(248, 113, 113, 1); background-color: rgba(185, 28, 28, 0.7); }
+        }
+        .penalty-card {
+            animation: pulse-red 2s infinite ease-in-out;
+        }
 
-    .card {
-      background: var(--card-bg);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 20px;
-      border: 1px solid var(--border-color);
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    label {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      font-weight: 600;
-    }
-
-    input, select, button {
-      padding: 12px;
-      border-radius: 8px;
-      border: 1px solid var(--border-color);
-      background-color: #0f1015;
-      color: var(--text-main);
-      font-size: 1rem;
-      outline: none;
-    }
-
-    input:focus, select:focus {
-      border-color: var(--accent-red);
-    }
-
-    button.btn-add {
-      background-color: var(--accent-red);
-      color: #fff;
-      font-weight: bold;
-      border: none;
-      cursor: pointer;
-      margin-top: 8px;
-      transition: opacity 0.2s;
-    }
-
-    button.btn-add:hover {
-      opacity: 0.9;
-    }
-
-    .checkbox-group {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      cursor: pointer;
-    }
-
-    .checkbox-group input {
-      width: 18px;
-      height: 18px;
-      accent-color: var(--accent-red);
-    }
-
-    .standings-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-
-    .standing-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 16px;
-      background: var(--card-bg);
-      border-radius: 8px;
-      margin-bottom: 8px;
-      border: 1px solid var(--border-color);
-    }
-
-    .rank {
-      font-weight: bold;
-      font-size: 1.1rem;
-      width: 30px;
-      color: var(--accent-red);
-    }
-
-    .driver-name {
-      flex: 1;
-      font-weight: 600;
-    }
-
-    .points {
-      font-weight: bold;
-      font-size: 1.1rem;
-      background: #252833;
-      padding: 4px 12px;
-      border-radius: 20px;
-    }
-  </style>
+        @keyframes modal-pop {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-modal-pop {
+            animation: modal-pop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+    </style>
 </head>
-<body>
+<body class="bg-slate-950 text-slate-100 min-h-full flex flex-col justify-between selection:bg-emerald-500 selection:text-slate-950">
 
-  <div class="container">
-    <h1>🏆 Classifica F1</h1>
+    <!-- HEADER BARRA SUPERIORE -->
+    <header class="border-b border-slate-800 bg-slate-900/90 py-3.5 px-4 sm:px-6 sticky top-0 z-30 backdrop-blur-md">
+        <div class="max-w-6xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-emerald-950/50">
+                    5k
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-base sm:text-lg text-white leading-tight">Segnapunti 5000</h1>
+                    <p class="text-[11px] text-slate-400">5 Dadi &bull; 5000 Esatti &bull; Giro Finale</p>
+                </div>
+            </div>
 
-    <!-- Form Inserimento Risultati -->
-    <div class="card">
-      <div class="form-group">
-        <label for="driverSelect">Pilota</label>
-        <select id="driverSelect">
-          <option value="Max Verstappen">Max Verstappen</option>
-          <option value="Charles Leclerc">Charles Leclerc</option>
-          <option value="Lando Norris">Lando Norris</option>
-          <option value="Lewis Hamilton">Lewis Hamilton</option>
-          <option value="Oscar Piastri">Oscar Piastri</option>
-          <option value="Carlos Sainz">Carlos Sainz</option>
-          <option value="George Russell">George Russell</option>
-        </select>
+            <div class="flex items-center space-x-2">
+                <button id="undoGlobalBtn" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition flex items-center space-x-1.5 shadow-sm active:scale-95">
+                    <i class="fa-solid fa-rotate-left text-amber-400"></i>
+                    <span class="hidden sm:inline">Annulla Mossa</span>
+                </button>
+                <button id="openResetModalBtn" class="px-3 py-1.5 rounded-xl bg-red-950/80 hover:bg-red-900 text-red-200 text-xs font-bold border border-red-800 transition active:scale-95 flex items-center space-x-1.5 shadow-md">
+                    <i class="fa-solid fa-power-off text-red-400"></i>
+                    <span>Nuova Partita</span>
+                </button>
+            </div>
+        </div>
+    </header>
 
-        <label for="positionSelect">Posizione Arrivo Gara</label>
-        <select id="positionSelect">
-          <option value="1">1° Posto (25 pt)</option>
-          <option value="2">2° Posto (18 pt)</option>
-          <option value="3">3° Posto (15 pt)</option>
-          <option value="4">4° Posto (12 pt)</option>
-          <option value="5">5° Posto (10 pt)</option>
-          <option value="6">6° Posto (8 pt)</option>
-          <option value="7">7° Posto (6 pt)</option>
-          <option value="8">8° Posto (4 pt)</option>
-          <option value="9">9° Posto (2 pt)</option>
-          <option value="10">10° Posto (1 pt)</option>
-          <option value="11">Fuori dai primi 10 (0 pt)</option>
-        </select>
+    <main class="max-w-6xl w-full mx-auto p-3 sm:p-6 flex-1 flex flex-col space-y-6">
 
-        <label class="checkbox-group">
-          <input type="checkbox" id="fastestLapCheck">
-          <span>Giro Più Veloce (+1 pt se in top 10)</span>
-        </label>
+        <!-- BANNER GIRO FINALE IN CORSO -->
+        <div id="finalRoundBanner" class="hidden bg-amber-500/10 border-2 border-amber-500 rounded-2xl p-4 text-amber-300 flex items-center justify-between shadow-lg animate-pulse">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-flag-checkered text-2xl text-amber-400"></i>
+                <div>
+                    <h4 class="font-extrabold text-sm sm:text-base text-white">GIRO FINALE IN CORSO!</h4>
+                    <p class="text-xs text-amber-200/90">Un giocatore ha raggiunto 5000 pt. Ultimissimo turno per tentare il pareggio o il controsorpasso!</p>
+                </div>
+            </div>
+        </div>
 
-        <button class="btn-add" onclick="addPoints()">Aggiungi Punti</button>
-      </div>
+        <!-- 1. SCHERMATA SETUP INIZIALE -->
+        <section id="setupSection" class="bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-2xl space-y-6">
+            <div class="text-center space-y-2 max-w-md mx-auto">
+                <div class="w-16 h-16 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center text-3xl mx-auto shadow-inner">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+                <h2 class="text-2xl font-black text-white">Preparazione Partita</h2>
+                <p class="text-xs text-slate-400">Inserisci i nomi dei partecipanti per iniziare la sfida al 5000 con 5 dadi!</p>
+            </div>
+
+            <!-- Form Aggiunta Giocatore -->
+            <form id="addPlayerForm" class="flex flex-col sm:flex-row gap-3 max-w-xl mx-auto">
+                <div class="flex-1 relative">
+                    <i class="fa-solid fa-user-plus absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                    <input 
+                        type="text" 
+                        id="newPlayerName" 
+                        placeholder="Nome giocatore (es. Marco, Giulia)..." 
+                        class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-11 pr-4 py-3 text-sm font-medium text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition shadow-inner"
+                        autocomplete="off"
+                    >
+                </div>
+                <button 
+                    type="submit" 
+                    class="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-3 rounded-xl text-sm font-bold transition flex items-center justify-center space-x-2 shadow-lg shadow-emerald-950 shrink-0 active:scale-95"
+                >
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Aggiungi</span>
+                </button>
+            </form>
+
+            <!-- Lista dei Giocatori Aggiunti -->
+            <div class="max-w-xl mx-auto">
+                <h3 class="text-xs uppercase font-extrabold tracking-wider text-slate-400 mb-3 flex items-center justify-between">
+                    <span>Partecipanti Registrati</span>
+                    <span id="playerCountBadge" class="bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full text-[10px]">0 giocatori</span>
+                </h3>
+
+                <div id="setupPlayersList" class="space-y-2 min-h-[60px] bg-slate-950/50 p-3 rounded-2xl border border-slate-800/80">
+                    <p id="noPlayersText" class="text-xs text-slate-500 text-center py-4 italic">Nessun giocatore inserito. Aggiungi almeno un nome.</p>
+                </div>
+
+                <button 
+                    id="startGameBtn" 
+                    disabled 
+                    class="w-full mt-5 py-4 rounded-2xl bg-slate-800 text-slate-500 font-extrabold text-base transition shadow-xl flex items-center justify-center space-x-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                    <i class="fa-solid fa-play"></i>
+                    <span>INIZIA LA PARTITA</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- 2. SCHERMATA DI GIOCO ATTIVA -->
+        <section id="turnSection" class="hidden bg-slate-900 rounded-3xl p-5 sm:p-7 border border-emerald-500/30 shadow-2xl relative overflow-hidden">
+            <div class="absolute -top-16 -right-16 w-44 h-44 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <!-- Intestazione Turno Attivo -->
+            <div class="flex flex-wrap items-center justify-between pb-4 border-b border-slate-800 gap-3">
+                <div>
+                    <span class="text-[11px] uppercase tracking-wider font-extrabold text-emerald-400 block flex items-center space-x-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span>TURNO <span id="currentTurnNumber">#1</span> &bull; TOCCA A</span>
+                    </span>
+                    <h2 id="activePlayerName" class="text-2xl sm:text-4xl font-black text-white mt-0.5">---</h2>
+                </div>
+                <div class="text-right bg-slate-950 px-4 py-2.5 rounded-2xl border border-slate-800 shadow-inner">
+                    <span class="text-[10px] uppercase text-slate-400 block font-semibold">Totale Attuale</span>
+                    <div class="flex items-baseline justify-end space-x-1">
+                        <span id="activePlayerCurrentScore" class="text-2xl sm:text-3xl font-black font-mono-num text-amber-400">0</span>
+                        <span class="text-xs text-slate-500 font-bold">/ 5000 pt</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inserimento Punti Manuale e Tasti Rapidi -->
+            <div class="mt-5 space-y-5">
+                <div>
+                    <div class="flex justify-between items-center mb-1.5">
+                        <label for="turnScoreInput" class="text-xs font-semibold text-slate-300">Inserisci i punti ottenuti nel turno:</label>
+                        <span class="text-[11px] text-amber-400 font-bold">Target: 5000 Esatti</span>
+                    </div>
+                    <div class="relative">
+                        <input 
+                            type="number" 
+                            id="turnScoreInput" 
+                            step="50" 
+                            min="0" 
+                            placeholder="Digita il punteggio (es. 350, 500)..." 
+                            class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3.5 text-slate-100 font-mono-num text-2xl font-bold focus:outline-none focus:border-emerald-500 transition shadow-inner"
+                        >
+                        <button id="clearInputBtn" type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 p-2 text-base" title="Svuota">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Bottoni Rapidi Incremento -->
+                <div>
+                    <span class="text-[11px] text-slate-400 font-semibold block mb-2">Pulsanti rapidi incremento punti:</span>
+                    <div class="grid grid-cols-5 gap-1.5 sm:gap-2.5">
+                        <button type="button" class="quick-add-btn py-3 rounded-xl bg-slate-800 hover:bg-slate-700 active:bg-emerald-600 text-xs sm:text-sm font-mono-num font-bold text-emerald-400 hover:text-white border border-slate-700 transition active:scale-95 shadow-sm" data-val="50">+50</button>
+                        <button type="button" class="quick-add-btn py-3 rounded-xl bg-slate-800 hover:bg-slate-700 active:bg-emerald-600 text-xs sm:text-sm font-mono-num font-bold text-emerald-400 hover:text-white border border-slate-700 transition active:scale-95 shadow-sm" data-val="100">+100</button>
+                        <button type="button" class="quick-add-btn py-3 rounded-xl bg-slate-800 hover:bg-slate-700 active:bg-emerald-600 text-xs sm:text-sm font-mono-num font-bold text-emerald-400 hover:text-white border border-slate-700 transition active:scale-95 shadow-sm" data-val="350">+350</button>
+                        <button type="button" class="quick-add-btn py-3 rounded-xl bg-slate-800 hover:bg-slate-700 active:bg-emerald-600 text-xs sm:text-sm font-mono-num font-bold text-emerald-400 hover:text-white border border-slate-700 transition active:scale-95 shadow-sm" data-val="500">+500</button>
+                        <button type="button" class="quick-add-btn py-3 rounded-xl bg-slate-800 hover:bg-slate-700 active:bg-emerald-600 text-xs sm:text-sm font-mono-num font-bold text-emerald-400 hover:text-white border border-slate-700 transition active:scale-95 shadow-sm" data-val="1000">+1000</button>
+                    </div>
+                </div>
+
+                <!-- Pulsanti Azione Principali -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                    <button 
+                        id="saveTurnBtn" 
+                        type="button" 
+                        class="py-4 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-sm sm:text-base transition shadow-xl shadow-emerald-950 flex items-center justify-center space-x-2 active:scale-95"
+                    >
+                        <i class="fa-solid fa-check text-lg"></i>
+                        <span>AGGIUNGI PUNTI & PASSA</span>
+                    </button>
+
+                    <button 
+                        id="farkleBtn" 
+                        type="button" 
+                        class="py-4 px-4 rounded-2xl bg-slate-800 hover:bg-red-950 hover:text-red-200 hover:border-red-800 border border-slate-700 text-slate-300 font-bold text-sm sm:text-base transition flex items-center justify-center space-x-2 active:scale-95 shadow-md"
+                    >
+                        <i class="fa-solid fa-ban text-red-400 text-lg"></i>
+                        <span>SBALLO / ZERO (0 pt)</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. TABELLA SEGNAPUNTI A GRIGLIA -->
+        <section id="tableSection" class="hidden bg-slate-900 rounded-3xl border border-slate-800 shadow-2xl overflow-hidden flex flex-col">
+            <div class="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between bg-slate-900/90">
+                <div class="flex items-center space-x-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+                        <i class="fa-solid fa-table-cells text-base"></i>
+                    </div>
+                    <h3 class="font-extrabold text-base text-white">Tabella Griglia Turni</h3>
+                </div>
+                <div class="flex items-center space-x-3 text-xs">
+                    <div class="flex items-center space-x-1.5">
+                        <span class="w-3 h-3 rounded-md bg-red-600 border border-red-400 inline-block"></span>
+                        <span class="text-slate-400 hidden sm:inline">Penalità -500 pt</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabella Scrollabile Stile Griglia -->
+            <div class="overflow-x-auto table-container">
+                <table class="w-full text-left border-collapse min-w-[550px]">
+                    <thead class="bg-slate-950/90 border-b-2 border-slate-800 text-xs">
+                        <tr>
+                            <th class="py-3.5 px-3 w-20 text-center text-slate-400 font-bold uppercase border-r border-slate-800 bg-slate-950 sticky left-0 z-10">Turno</th>
+                            <th id="playerHeaders" class="p-0" colspan="100">
+                                <!-- Generato dinamicamente in JS -->
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="tableBody" class="divide-y divide-slate-800/80 font-mono-num text-xs">
+                        <!-- Generato dinamicamente in JS -->
+                    </tbody>
+
+                    <tfoot class="bg-slate-950 border-t-2 border-slate-700 font-bold text-sm">
+                        <tr>
+                            <td class="py-4 px-3 text-center text-emerald-400 font-black border-r border-slate-800 bg-slate-950 sticky left-0 z-10">TOTALE</td>
+                            <td id="playerFooters" class="p-0" colspan="100">
+                                <!-- Generato dinamicamente in JS -->
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </section>
+
+        <!-- 4. REGOLAMENTO COMPLETO A FONDO PAGINA -->
+        <section class="bg-slate-900 rounded-3xl border border-slate-800 p-5 sm:p-8 shadow-2xl space-y-6 text-slate-300">
+            <div class="border-b border-slate-800 pb-4 flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 text-xl">
+                    <i class="fa-solid fa-book-open"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-extrabold text-white">Regolamento Ufficiale e Penalità del 5000</h3>
+                    <p class="text-xs text-slate-400">Guida completa alle combinazioni dei dadi, penalità e giro finale</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs sm:text-sm leading-relaxed">
+                
+                <!-- 1. Scopo del Gioco -->
+                <div class="space-y-2.5 bg-slate-950/60 p-4.5 rounded-2xl border border-slate-800/80">
+                    <h4 class="font-extrabold text-amber-400 text-sm flex items-center space-x-2">
+                        <i class="fa-solid fa-bullseye text-amber-400"></i>
+                        <span>1. Scopo del Gioco</span>
+                    </h4>
+                    <p class="text-slate-300">
+                        Si gioca con <strong>5 dadi classici a 6 facce</strong>. L'obiettivo è essere il primo giocatore a raggiungere <strong>ESATTAMENTE 5.000 PUNTI</strong> senza essere superato o raggiunto nel giro finale.
+                    </p>
+                </div>
+
+                <!-- 2. Regola dei 5000 Esatti e Giro Finale -->
+                <div class="space-y-2.5 bg-amber-950/30 p-4.5 rounded-2xl border border-amber-800/60">
+                    <h4 class="font-extrabold text-amber-400 text-sm flex items-center space-x-2">
+                        <i class="fa-solid fa-flag-checkered text-amber-400"></i>
+                        <span>2. Regola 5000 Esatti & Giro Finale</span>
+                    </h4>
+                    <p class="text-slate-200">
+                        Per chiudere occorre raggiungere <strong>esattamente 5000 punti</strong>. Se si supera 5000, il turno vale 0 pt. Quando un giocatore fa 5000 pt, scatta il <strong>giro finale</strong>: tutti gli altri giocatori effettuano il loro ultimo tiro per cercare di raggiungerlo o superarlo.
+                    </p>
+                    <div class="bg-amber-950/80 p-3 rounded-xl border border-amber-700/80 text-xs text-amber-200 font-medium">
+                        🏁 Se nel giro finale un altro giocatore raggiunge o supera i 5000 punti, la sfida continua con un ulteriore giro finale!
+                    </div>
+                </div>
+
+                <!-- 3. Valore Dadi e Combinazioni -->
+                <div class="space-y-2.5 bg-slate-950/60 p-4.5 rounded-2xl border border-slate-800/80">
+                    <h4 class="font-extrabold text-emerald-400 text-sm flex items-center space-x-2">
+                        <i class="fa-solid fa-dice text-emerald-400"></i>
+                        <span>3. Valore dei 5 Dadi</span>
+                    </h4>
+                    <ul class="space-y-1.5 text-slate-300">
+                        <li><strong class="text-emerald-300">Dado 1 singolo:</strong> 100 Punti</li>
+                        <li><strong class="text-emerald-300">Dado 5 singolo:</strong> 50 Punti</li>
+                        <li><strong class="text-emerald-300">Tris di 1:</strong> 1.000 Punti</li>
+                        <li><strong class="text-emerald-300">Tris di 2, 3, 4, 5, 6:</strong> $100 \times \text{valore}$ (es. tre 4 = 400 pt, tre 6 = 600 pt)</li>
+                        <li><strong class="text-emerald-300">Poker / Cinquina:</strong> Ogni dado extra raddoppia il valore del tris.</li>
+                    </ul>
+                </div>
+
+                <!-- 4. Combinazioni Speciali -->
+                <div class="space-y-2.5 bg-slate-950/60 p-4.5 rounded-2xl border border-slate-800/80">
+                    <h4 class="font-extrabold text-teal-400 text-sm flex items-center space-x-2">
+                        <i class="fa-solid fa-wand-magic-sparkles text-teal-400"></i>
+                        <span>4. Combinazioni Speciali</span>
+                    </h4>
+                    <ul class="space-y-1.5 text-slate-300">
+                        <li><strong class="text-teal-300">Scala Piccola (1-2-3-4-5) o (2-3-4-5-6):</strong> 500 Punti</li>
+                        <li><strong class="text-teal-300">Dadi Caldi (Hot Dice):</strong> Se usi tutti e 5 i dadi per fare punti, puoi riprenderli tutti in mano e continuare a tirare nello stesso turno!</li>
+                        <li><strong class="text-teal-300">Sballo:</strong> Se in un tiro non esce alcun dado utile, perdi tutti i punti accumulati nel turno (0 pt).</li>
+                    </ul>
+                </div>
+
+                <!-- 5. Regola della Penalità dei 500 Punti -->
+                <div class="space-y-2.5 bg-red-950/30 p-4.5 rounded-2xl border border-red-800/60 md:col-span-2">
+                    <h4 class="font-extrabold text-red-400 text-sm flex items-center space-x-2">
+                        <i class="fa-solid fa-skull text-red-400"></i>
+                        <span>5. Regola della Penalità di 500 Punti per Raggiungimento</span>
+                    </h4>
+                    <p class="text-slate-200">
+                        Quando un giocatore, sommando i punti del proprio turno, raggiunge <strong>ESATTAMENTE</strong> il punteggio totale attuale di un altro giocatore (con punteggio > 0):
+                    </p>
+                    <div class="bg-red-950/80 p-3.5 rounded-xl border border-red-700/80 text-xs text-red-100 font-medium space-y-1">
+                        <p class="text-red-300 font-bold">💥 Il giocatore raggiunto PERDE IMMEDIATAMENTE 500 PUNTI (scendendo di 500 pt, fino a un minimo di 0 pt)!</p>
+                        <p class="text-slate-300">Nella tabella della nostra app viene mostrato il badge rosso <span class="text-red-400 font-bold font-mono-num">-500 PENALITÀ</span> ed un avviso a schermo intero avvisa subito tutti i giocatori!</p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+
+    <!-- MODALE POPUP A TUTTO SCHERMO: GIRO FINALE AVVIATO -->
+    <div id="finalRoundModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-lg z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border-2 border-amber-500 rounded-3xl max-w-md w-full p-6 sm:p-8 text-center shadow-2xl space-y-5 animate-modal-pop relative overflow-hidden">
+            <div class="absolute -top-12 -left-12 w-32 h-32 bg-amber-500/20 rounded-full blur-2xl pointer-events-none"></div>
+            
+            <div class="w-20 h-20 rounded-3xl bg-amber-500 border-2 border-amber-300 flex items-center justify-center text-slate-950 text-4xl mx-auto shadow-2xl shadow-amber-900/80 animate-bounce">
+                <i class="fa-solid fa-flag-checkered"></i>
+            </div>
+
+            <div class="space-y-2">
+                <span class="bg-amber-950 text-amber-400 font-black text-xs uppercase px-3 py-1 rounded-full border border-amber-800">
+                    🚨 ULTIMO GIRO
+                </span>
+                <h3 class="text-2xl sm:text-3xl font-black text-white">PARTE IL GIRO FINALE!</h3>
+            </div>
+
+            <div class="bg-slate-950/80 p-4 rounded-2xl border border-amber-900/60 text-sm text-slate-200 space-y-2 font-medium">
+                <p id="finalRoundTriggerText" class="text-amber-400 font-bold text-lg">---</p>
+                <p>ha raggiunto quota <strong class="text-white font-mono-num font-bold">5000 PUNTI</strong>!</p>
+                <div class="pt-2 border-t border-slate-800 text-xs text-amber-200 font-medium">
+                    Ora tutti gli altri giocatori hanno un <strong>ultimo turno a disposizione</strong> per provare a raggiungerlo o superarlo!
+                </div>
+            </div>
+
+            <button id="closeFinalRoundModalBtn" class="w-full py-4 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-base transition shadow-xl shadow-amber-950 active:scale-95">
+                INIZIA IL GIRO FINALE!
+            </button>
+        </div>
     </div>
 
-    <!-- Classifica Generale -->
-    <div class="card">
-      <ul class="standings-list" id="standingsList">
-        <!-- Generato dinamicamente con JS -->
-      </ul>
+    <!-- MODALE POPUP A TUTTO SCHERMO: PENALITÀ 500 PUNTI (ROSSO) -->
+    <div id="penaltyModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-lg z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border-2 border-red-500 rounded-3xl max-w-md w-full p-6 sm:p-8 text-center shadow-2xl space-y-5 animate-modal-pop relative overflow-hidden">
+            <div class="absolute -top-12 -left-12 w-32 h-32 bg-red-500/20 rounded-full blur-2xl pointer-events-none"></div>
+            
+            <div class="w-20 h-20 rounded-3xl bg-red-600 border-2 border-red-400 flex items-center justify-center text-white text-4xl mx-auto shadow-2xl shadow-red-900/80 animate-bounce">
+                <i class="fa-solid fa-skull-crossbones"></i>
+            </div>
+
+            <div class="space-y-2">
+                <span class="bg-red-950 text-red-400 font-black text-xs uppercase px-3 py-1 rounded-full border border-red-800">
+                    ⚡ RAGGIUNGIMENTO
+                </span>
+                <h3 class="text-2xl sm:text-3xl font-black text-white">PENALITÀ -500 PUNTI!</h3>
+            </div>
+
+            <div class="bg-slate-950/80 p-4 rounded-2xl border border-red-900/60 text-sm text-slate-200 space-y-2 font-medium">
+                <p id="penaltyAttackerText" class="text-emerald-400 font-bold text-base">---</p>
+                <p>ha raggiunto l'esatto punteggio di</p>
+                <p id="penaltyVictimText" class="text-red-400 font-bold text-lg">---</p>
+                <div class="pt-2 border-t border-slate-800 text-xs text-red-300 font-mono-num">
+                    Il totale di <strong id="penaltyVictimNameSpan">---</strong> scende di <span class="font-extrabold text-red-400">-500 pt</span> ed ora è a <span id="penaltyNewScoreSpan" class="font-black text-amber-400 text-sm">---</span> pt.
+                </div>
+            </div>
+
+            <button id="closePenaltyModalBtn" class="w-full py-4 rounded-2xl bg-red-600 hover:bg-red-500 text-white font-black text-base transition shadow-xl shadow-red-950 active:scale-95">
+                HO CAPITO!
+            </button>
+        </div>
     </div>
-  </div>
 
-  <script>
-    // Tabella Punti F1 Standard
-    const f1PointsTable = {
-      1: 25, 2: 18, 3: 15, 4: 12, 5: 10,
-      6: 8,  7: 6,  8: 4,  9: 2,  10: 1
-    };
+    <!-- MODALE POPUP A TUTTO SCHERMO: PUNTEGGIO SUPERATO > 5000 (ARANCIONE/GIALLO) -->
+    <div id="overflowModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-lg z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border-2 border-amber-500 rounded-3xl max-w-md w-full p-6 sm:p-8 text-center shadow-2xl space-y-5 animate-modal-pop relative overflow-hidden">
+            <div class="absolute -top-12 -right-12 w-32 h-32 bg-amber-500/20 rounded-full blur-2xl pointer-events-none"></div>
+            
+            <div class="w-20 h-20 rounded-3xl bg-amber-500 border-2 border-amber-300 flex items-center justify-center text-slate-950 text-4xl mx-auto shadow-2xl shadow-amber-950">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
 
-    // Inizializzazione Dati (o da localStorage)
-    let drivers = JSON.parse(localStorage.getItem('f1_standings')) || [
-      { name: 'Max Verstappen', points: 0 },
-      { name: 'Charles Leclerc', points: 0 },
-      { name: 'Lando Norris', points: 0 },
-      { name: 'Lewis Hamilton', points: 0 },
-      { name: 'Oscar Piastri', points: 0 },
-      { name: 'Carlos Sainz', points: 0 },
-      { name: 'George Russell', points: 0 }
-    ];
+            <div class="space-y-2">
+                <span class="bg-amber-950 text-amber-400 font-black text-xs uppercase px-3 py-1 rounded-full border border-amber-800">
+                    ⚠️ REGOLA 5000 TONDO
+                </span>
+                <h3 class="text-2xl sm:text-3xl font-black text-white">PUNTEGGIO SUPERATO!</h3>
+            </div>
 
-    function renderStandings() {
-      // Ordina per punti decrescenti
-      drivers.sort((a, b) => b.points - a.points);
+            <div class="bg-slate-950/80 p-4 rounded-2xl border border-amber-900/60 text-sm text-slate-200 space-y-2 font-medium">
+                <p id="overflowPlayerText" class="text-amber-400 font-bold text-base">---</p>
+                <p>ha fatto <strong id="overflowPointsText" class="text-white">---</strong> pt arrivando a <span id="overflowAttemptText" class="text-red-400 font-bold">---</span> pt!</p>
+                <div class="pt-2 border-t border-slate-800 text-xs text-amber-200/90">
+                    Per vincere servono <strong>esattamente 5000 punti</strong>. I punti del turno vengono azzerati ed il totale rimane a <strong id="overflowOriginalScoreText" class="text-amber-400">---</strong> pt.
+                </div>
+            </div>
 
-      const listEl = document.getElementById('standingsList');
-      listEl.innerHTML = '';
+            <button id="closeOverflowModalBtn" class="w-full py-4 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-base transition shadow-xl shadow-amber-950 active:scale-95">
+                HO CAPITO!
+            </button>
+        </div>
+    </div>
 
-      drivers.forEach((driver, index) => {
-        const li = document.createElement('li');
-        li.className = 'standing-item';
-        li.innerHTML = `
-          <span class="rank">${index + 1}</span>
-          <span class="driver-name">${driver.name}</span>
-          <span class="points">${driver.points} PTS</span>
-        `;
-        listEl.appendChild(li);
-      });
+    <!-- MODALE VITTORIA -->
+    <div id="victoryModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-lg z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border-2 border-emerald-500 rounded-3xl max-w-md w-full p-6 sm:p-8 text-center shadow-2xl space-y-5 animate-modal-pop">
+            <div class="w-20 h-20 rounded-full bg-gradient-to-tr from-amber-400 to-emerald-400 flex items-center justify-center text-slate-950 text-4xl mx-auto font-black shadow-xl shadow-emerald-950">
+                🏆
+            </div>
+            <h2 class="text-3xl font-black text-white">VITTORIA TONDA!</h2>
+            <p class="text-sm text-slate-300">
+                Complimenti a <strong id="winnerName" class="text-emerald-400 text-2xl block my-1">---</strong>! <br>
+                Ha raggiunto quota <span id="winnerScore" class="font-mono-num font-bold text-amber-400">5000</span> punti ed ha vinto la partita senza essere superato nel giro finale!
+            </p>
+            <button id="closeVictoryModalBtn" class="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition shadow-lg">
+                Chiudi
+            </button>
+        </div>
+    </div>
 
-      // Salva nei dati locali
-      localStorage.setItem('f1_standings', JSON.stringify(drivers));
-    }
-
-    function addPoints() {
-      const selectedName = document.getElementById('driverSelect').value;
-      const position = parseInt(document.getElementById('positionSelect').value);
-      const hasFastestLap = document.getElementById('fastestLapCheck').checked;
-
-      let pts = f1PointsTable[position] || 0;
-
-      // Giro veloce assegna 1 pt solo se il pilota finisce nei primi 10
-      if (hasFastestLap && position <= 10) {
-        pts += 1;
-      }
-
-      const driver = drivers.find(d => d.name === selectedName);
-      if (driver) {
-        driver.points += pts;
-        renderStandings();
-        // Reset checkbox
-        document.getElementById('fastestLapCheck').checked = false;
-      }
-    }
-
-    // Primo render all'avvio
-    renderStandings();
-  </script>
-</body>
-</html>
+    <!-- MODALE CONFERMA RESET COMPLETO NUOVA PARTITA -->
+    <div id="confirmResetModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl space-y-4">
+            <div class="w-14 h-14 rounded-2xl bg-red-950/80 border border-red-800 flex items-center justify-center text-red-400 text-2xl mx-auto">
+                <i class="fa-solid fa-power-off"></i>
+            </div>
+            <h3 class="text-xl font-black text-white">Avvia Nuova Partita?</h3>
+            <p class="text-xs text-slate-300 leading-relaxed">
+                Questa azione azzera completamente il gioco: <br>
+                <strong class="text-red-400">Eliminerà la lista di TUTTI i giocatori, i punteggi totali e la tabella della partita corrente.</strong>
+            </p>
+            <div class="grid grid-cols-2 gap-2.5 pt-2">
+                <button id="cancelResetBtn" class="py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition">
+                    Annulla
+                </button>
+                <button id="confirmResetBtn" class="py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs transition shadow-lg shadow-red-950">
+                    Sì, Nuova Partita
+                </button>
+            </div>
+        </div>
+    </div>
     <script>
         // STATO APPLICAZIONE
         let state = {
