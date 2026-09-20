@@ -66,12 +66,16 @@
                     5k
                 </div>
                 <div>
-                    <h1 class="font-extrabold text-base sm:text-lg text-white leading-tight">Segnapunti 5000</h1>
+                    <h1 class="font-extrabold text-base sm:text-lg text-white leading-tight">Segnapunti 5000 (6 Dadi)</h1>
                     <p class="text-[11px] text-slate-400">5000 Esatti & Penalità -500 pt</p>
                 </div>
             </div>
 
             <div class="flex items-center space-x-2">
+                <button id="midGameAddPlayerBtn" class="hidden px-3 py-1.5 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 text-emerald-200 text-xs font-bold border border-emerald-800 transition active:scale-95 flex items-center space-x-1.5 shadow-md">
+                    <i class="fa-solid fa-user-plus text-emerald-400"></i>
+                    <span class="hidden sm:inline">+ Giocatore</span>
+                </button>
                 <button id="undoGlobalBtn" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition flex items-center space-x-1.5 shadow-sm active:scale-95">
                     <i class="fa-solid fa-rotate-left text-amber-400"></i>
                     <span class="hidden sm:inline">Annulla Mossa</span>
@@ -86,14 +90,20 @@
 
     <main class="max-w-6xl w-full mx-auto p-3 sm:p-6 flex-1 flex flex-col space-y-6">
 
-        <!-- 1. SCHERMATA SETUP INIZIALE (QUANDO NON CI SONO GIOCATORI O LA PARTITA NON È AVVIATA) -->
+        <!-- Banner Giro Finale -->
+        <div id="lastRoundBanner" class="hidden bg-amber-500/10 border-2 border-amber-500/50 rounded-2xl p-4 text-center text-amber-300 font-bold text-sm animate-pulse">
+            <i class="fa-solid fa-flag-checkered mr-2 text-amber-400 text-lg"></i>
+            GIRO FINALE IN CORSO! Un giocatore ha raggiunto i 5000 punti. Si completa il giro prima del verdetto finale!
+        </div>
+
+        <!-- 1. SCHERMATA SETUP INIZIALE -->
         <section id="setupSection" class="bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-2xl space-y-6">
             <div class="text-center space-y-2 max-w-md mx-auto">
                 <div class="w-16 h-16 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center text-3xl mx-auto shadow-inner">
                     <i class="fa-solid fa-users"></i>
                 </div>
                 <h2 class="text-2xl font-black text-white">Preparazione Partita</h2>
-                <p class="text-xs text-slate-400">Inserisci i nomi dei partecipanti per iniziare la sfida al 5000!</p>
+                <p class="text-xs text-slate-400">Inserisci i nomi dei partecipanti per iniziare la sfida al 5000 a 6 dadi!</p>
             </div>
 
             <!-- Form Aggiunta Giocatore -->
@@ -174,7 +184,7 @@
                             id="turnScoreInput" 
                             step="50" 
                             min="0" 
-                            placeholder="Digita il punteggio (es. 350, 500)..." 
+                            placeholder="Digita il punteggio (es. 250, 500, 1000)..." 
                             class="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-3.5 text-slate-100 font-mono-num text-2xl font-bold focus:outline-none focus:border-emerald-500 transition shadow-inner"
                         >
                         <button id="clearInputBtn" type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 p-2 text-base" title="Svuota">
@@ -189,7 +199,7 @@
                     <div class="grid grid-cols-5 gap-1.5 sm:gap-2.5">
                         <button type="button" class="quick-add-btn py-3 rounded-xl bg-slate-800 hover:bg-slate-700 active:bg-emerald-600 text-xs sm:text-sm font-mono-num font-bold text-emerald-400 hover:text-white border border-slate-700 transition active:scale-95 shadow-sm" data-val="50">+50</button>
                         <button type="button" class="quick-add-btn py-3 rounded-xl bg-slate-800 hover:bg-slate-700 active:bg-emerald-600 text-xs sm:text-sm font-mono-num font-bold text-emerald-400 hover:text-white border border-slate-700 transition active:scale-95 shadow-sm" data-val="100">+100</button>
-                        <button type="button" class="quick-add-btn py-3 rounded-xl bg-slate-800 hover:bg-slate-700 active:bg-emerald-600 text-xs sm:text-sm font-mono-num font-bold text-emerald-400 hover:text-white border border-slate-700 transition active:scale-95 shadow-sm" data-val="350">+350</button>
+                        <button type="button" class="quick-add-btn py-3 rounded-xl bg-slate-800 hover:bg-slate-700 active:bg-emerald-600 text-xs sm:text-sm font-mono-num font-bold text-emerald-400 hover:text-white border border-slate-700 transition active:scale-95 shadow-sm" data-val="250">+250</button>
                         <button type="button" class="quick-add-btn py-3 rounded-xl bg-slate-800 hover:bg-slate-700 active:bg-emerald-600 text-xs sm:text-sm font-mono-num font-bold text-emerald-400 hover:text-white border border-slate-700 transition active:scale-95 shadow-sm" data-val="500">+500</button>
                         <button type="button" class="quick-add-btn py-3 rounded-xl bg-slate-800 hover:bg-slate-700 active:bg-emerald-600 text-xs sm:text-sm font-mono-num font-bold text-emerald-400 hover:text-white border border-slate-700 transition active:scale-95 shadow-sm" data-val="1000">+1000</button>
                     </div>
@@ -270,8 +280,8 @@
                     <i class="fa-solid fa-book-open"></i>
                 </div>
                 <div>
-                    <h3 class="text-lg font-extrabold text-white">Regolamento Ufficiale e Penalità del 5000</h3>
-                    <p class="text-xs text-slate-400">Guida completa alle combinazioni dei dadi, penalità e vittoria esatta</p>
+                    <h3 class="text-lg font-extrabold text-white">Regolamento Ufficiale e Penalità del 5000 (6 Dadi)</h3>
+                    <p class="text-xs text-slate-400">Guida completa alle combinazioni dei dadi, giro finale e penalità</p>
                 </div>
             </div>
 
@@ -284,21 +294,22 @@
                         <span>1. Scopo del Gioco</span>
                     </h4>
                     <p class="text-slate-300">
-                        Si gioca con <strong>6 dadi classici a 6 facce</strong>. L'obiettivo è essere il primo giocatore a raggiungere **ESATTAMENTE 5.000 PUNTI**.
+                        Si gioca con <strong>6 dadi classici a 6 facce</strong>. L'obiettivo è raggiungere **ESATTAMENTE 5.000 PUNTI**.
                     </p>
                 </div>
 
-                <!-- 2. Regola dei 5000 Esatti -->
+                <!-- 2. Regola dei 5000 Esatti & Giro Finale -->
                 <div class="space-y-2.5 bg-amber-950/30 p-4.5 rounded-2xl border border-amber-800/60">
                     <h4 class="font-extrabold text-amber-400 text-sm flex items-center space-x-2">
                         <i class="fa-solid fa-flag-checkered text-amber-400"></i>
-                        <span>2. Regola Chiusura 5000 Esatti</span>
+                        <span>2. Regola 5000 Esatti e Giro Finale</span>
                     </h4>
                     <p class="text-slate-200">
-                        Per vincere occorre raggiungere <strong>esattamente 5000 punti</strong>. Non è consentito superare la quota dei 5000 pt.
+                        Per vincere occorre raggiungere <strong>esattamente 5000 punti</strong>. Se superi 5000 punti, il turno vale 0 pt.
                     </p>
-                    <div class="bg-amber-950/80 p-3 rounded-xl border border-amber-700/80 text-xs text-amber-200 font-medium">
-                        ⚠️ Se i punti accumulati in un turno portano il totale OLTRE i 5000 (es. da 4800 a 5100), il turno vale <strong>0 punti</strong> ed il totale resta invariato.
+                    <div class="bg-amber-950/80 p-3 rounded-xl border border-amber-700/80 text-xs text-amber-200 font-medium space-y-1">
+                        <p><strong>🏁 Giro Finale:</strong> Quando un giocatore raggiunge i 5000 punti, si completa comunque tutto il giro fino a ritornare al primo vincitore.</p>
+                        <p>💥 Se durante il giro finale qualcuno raggiunge o supera i 5000 punti, <strong>butta giù di 500 punti</strong> il primo vincitore!</p>
                     </div>
                 </div>
 
@@ -312,8 +323,8 @@
                         <li><strong class="text-emerald-300">Dado 1 singolo:</strong> 100 Punti</li>
                         <li><strong class="text-emerald-300">Dado 5 singolo:</strong> 50 Punti</li>
                         <li><strong class="text-emerald-300">Tris di 1:</strong> 1.000 Punti</li>
-                        <li><strong class="text-emerald-300">Tris di 2, 3, 4, 5, 6:</strong> $100 \times \text{valore}$ (es. tre 4 = 400 pt, tre 6 = 600 pt)</li>
-                        <li><strong class="text-emerald-300">Poker / Cinquina / Sestina:</strong> Ogni dado extra oltre il tris raddoppia il valore del tris.</li>
+                        <li><strong class="text-emerald-300">Tris di 2, 3, 4, 5, 6:</strong> Valore faccia × 100 (es. tre 2 = 200 pt, tre 3 = 300 pt, ..., tre 6 = 600 pt)</li>
+                        <li><strong class="text-emerald-300">5 Dadi con il valore 1:</strong> 3.000 Punti</li>
                     </ul>
                 </div>
 
@@ -321,13 +332,12 @@
                 <div class="space-y-2.5 bg-slate-950/60 p-4.5 rounded-2xl border border-slate-800/80">
                     <h4 class="font-extrabold text-teal-400 text-sm flex items-center space-x-2">
                         <i class="fa-solid fa-wand-magic-sparkles text-teal-400"></i>
-                        <span>4. Combinazioni Speciali e Dadi Caldi</span>
+                        <span>4. Combinazioni Speciali</span>
                     </h4>
                     <ul class="space-y-1.5 text-slate-300">
-                        <li><strong class="text-teal-300">Scala Completa (1-2-3-4-5-6):</strong> 1.500 Punti</li>
-                        <li><strong class="text-teal-300">Tre Coppie:</strong> 750 Punti</li>
+                        <li><strong class="text-teal-300">Scala Completa (1-2-3-4-5-6):</strong> 1.000 Punti</li>
                         <li><strong class="text-teal-300">Dadi Caldi (Hot Dice):</strong> Se usi tutti e 6 i dadi per fare punti, puoi riprenderli tutti in mano e continuare a tirare nello stesso turno!</li>
-                        <li><strong class="text-teal-300">Sballo (Fallo):</strong> Se in un tiro non esce alcun dado utile, perdi tutti i punti accumulati nel turno (0 pt).</li>
+                        <li><strong class="text-teal-300">Sballo:</strong> Se in un tiro non esce alcun dado utile, perdi tutti i punti accumulati nel turno (0 pt).</li>
                     </ul>
                 </div>
 
@@ -342,7 +352,6 @@
                     </p>
                     <div class="bg-red-950/80 p-3.5 rounded-xl border border-red-700/80 text-xs text-red-100 font-medium space-y-1">
                         <p class="text-red-300 font-bold">💥 Il giocatore raggiunto PERDE IMMEDIATAMENTE 500 PUNTI (scendendo di 500 pt, fino a un minimo di 0 pt)!</p>
-                        <p class="text-slate-300">Nella tabella della nostra app viene mostrato il badge rosso <span class="text-red-400 font-bold font-mono-num">-500 PENALITÀ</span> ed un avviso a schermo intero avvisa subito tutti i giocatori!</p>
                     </div>
                 </div>
 
@@ -351,6 +360,33 @@
 
     </main>
 
+    <!-- MODALE AGGIUNGI GIOCATORE A PARTITA INIZIATA -->
+    <div id="addPlayerMidGameModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl space-y-4">
+            <div class="w-14 h-14 rounded-2xl bg-emerald-950/80 border border-emerald-800 flex items-center justify-center text-emerald-400 text-2xl mx-auto">
+                <i class="fa-solid fa-user-plus"></i>
+            </div>
+            <h3 class="text-xl font-black text-white">Aggiungi Nuovo Giocatore</h3>
+            <p class="text-xs text-slate-300 leading-relaxed">
+                Il nuovo giocatore entrerà in gioco a partita iniziata a partire dal turno corrente con **0 punti**.
+            </p>
+            <input 
+                type="text" 
+                id="midGamePlayerNameInput" 
+                placeholder="Nome nuovo giocatore..." 
+                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm font-medium text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition shadow-inner"
+                autocomplete="off"
+            >
+            <div class="grid grid-cols-2 gap-2.5 pt-2">
+                <button id="cancelMidGameAddBtn" class="py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition">
+                    Annulla
+                </button>
+                <button id="confirmMidGameAddBtn" class="py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-lg shadow-emerald-950">
+                    Aggiungi Ora
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- MODALE POPUP A TUTTO SCHERMO: PENALITÀ 500 PUNTI (ROSSO) -->
     <div id="penaltyModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-lg z-50 flex items-center justify-center p-4 hidden">
@@ -422,7 +458,7 @@
             <h2 class="text-3xl font-black text-white">VITTORIA TONDA!</h2>
             <p class="text-sm text-slate-300">
                 Complimenti a <strong id="winnerName" class="text-emerald-400 text-2xl block my-1">---</strong>! <br>
-                Ha raggiunto esattamente quota <span class="font-mono-num font-bold text-amber-400">5000</span> punti ed ha vinto la partita!
+                Ha concluso il giro in testa a <span class="font-mono-num font-bold text-amber-400">5000</span> punti ed ha vinto la partita!
             </p>
             <button id="closeVictoryModalBtn" class="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition shadow-lg">
                 Chiudi
@@ -459,6 +495,7 @@
             players: [], // Array di { id, name, score, turns: [ { turnNum, pointsAdded, totalScore, wasPenalized, penalizerName, lossAmount, overflowed } ] }
             activePlayerIndex: 0,
             targetScore: 5000,
+            firstWinnerIndex: null, // Indice del primo giocatore che ha raggiunto 5000 pt per il giro finale
             historyStack: []
         };
 
@@ -466,6 +503,7 @@
         const setupSection = document.getElementById('setupSection');
         const turnSection = document.getElementById('turnSection');
         const tableSection = document.getElementById('tableSection');
+        const lastRoundBanner = document.getElementById('lastRoundBanner');
 
         const addPlayerForm = document.getElementById('addPlayerForm');
         const newPlayerNameInput = document.getElementById('newPlayerName');
@@ -473,6 +511,12 @@
         const noPlayersText = document.getElementById('noPlayersText');
         const playerCountBadge = document.getElementById('playerCountBadge');
         const startGameBtn = document.getElementById('startGameBtn');
+
+        const midGameAddPlayerBtn = document.getElementById('midGameAddPlayerBtn');
+        const addPlayerMidGameModal = document.getElementById('addPlayerMidGameModal');
+        const midGamePlayerNameInput = document.getElementById('midGamePlayerNameInput');
+        const cancelMidGameAddBtn = document.getElementById('cancelMidGameAddBtn');
+        const confirmMidGameAddBtn = document.getElementById('confirmMidGameAddBtn');
 
         const currentTurnNumber = document.getElementById('currentTurnNumber');
         const activePlayerName = document.getElementById('activePlayerName');
@@ -516,7 +560,7 @@
         // INIZIALIZZAZIONE
         window.addEventListener('DOMContentLoaded', render);
 
-        // FORM AGGIUNTA GIOCATORE
+        // FORM AGGIUNTA GIOCATORE INIZIALE
         addPlayerForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const name = newPlayerNameInput.value.trim();
@@ -541,7 +585,57 @@
             }
         });
 
-        // PULSANTI INCREMENTO RAPIDO (+50, +100, +350, +500, +1000)
+        // AGGIUNGI GIOCATORE A PARTITA INIZIATA
+        midGameAddPlayerBtn.addEventListener('click', () => {
+            midGamePlayerNameInput.value = '';
+            addPlayerMidGameModal.classList.remove('hidden');
+            midGamePlayerNameInput.focus();
+        });
+
+        cancelMidGameAddBtn.addEventListener('click', () => {
+            addPlayerMidGameModal.classList.add('hidden');
+        });
+
+        confirmMidGameAddBtn.addEventListener('click', () => {
+            const name = midGamePlayerNameInput.value.trim();
+            if (name) {
+                // Salva lo stato per Undo
+                const snapshot = JSON.parse(JSON.stringify({
+                    gameStarted: state.gameStarted,
+                    players: state.players,
+                    activePlayerIndex: state.activePlayerIndex,
+                    firstWinnerIndex: state.firstWinnerIndex
+                }));
+                state.historyStack.push(snapshot);
+
+                // Calcola quanti turni sono già stati giocati nel complesso
+                const maxTurnsPlayed = Math.max(...state.players.map(p => p.turns.length), 0);
+                const missingTurns = [];
+                for (let i = 0; i < maxTurnsPlayed; i++) {
+                    missingTurns.push({
+                        turnNum: i + 1,
+                        pointsAdded: 0,
+                        totalScore: 0,
+                        wasPenalized: false,
+                        penalizerName: null,
+                        lossAmount: 0,
+                        overflowed: false
+                    });
+                }
+
+                state.players.push({
+                    id: Date.now().toString() + Math.random().toString(36).substring(2, 5),
+                    name: name,
+                    score: 0,
+                    turns: missingTurns
+                });
+
+                addPlayerMidGameModal.classList.add('hidden');
+                render();
+            }
+        });
+
+        // PULSANTI INCREMENTO RAPIDO (+50, +100, +250, +500, +1000)
         document.querySelectorAll('.quick-add-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const addVal = parseInt(btn.getAttribute('data-val'));
@@ -570,7 +664,7 @@
             processTurn(0);
         });
 
-        // LOGICA DI CALCOLO DEL TURNO, 5000 TONDO E PENALITÀ -500 PT
+        // LOGICA DI CALCOLO DEL TURNO, 5000 TONDO, GIRO FINALE E PENALITÀ -500 PT
         function processTurn(pointsAdded) {
             if (!state.gameStarted || state.players.length === 0) return;
 
@@ -578,7 +672,8 @@
             const snapshot = JSON.parse(JSON.stringify({
                 gameStarted: state.gameStarted,
                 players: state.players,
-                activePlayerIndex: state.activePlayerIndex
+                activePlayerIndex: state.activePlayerIndex,
+                firstWinnerIndex: state.firstWinnerIndex
             }));
             state.historyStack.push(snapshot);
 
@@ -598,7 +693,7 @@
                     overflowed: true
                 });
 
-                // APRI IMMEDIATAMENTE IL MODALE POPUP DI AVVISO OVERFLOW
+                // POPUP OVERFLOW
                 overflowPlayerText.textContent = activePlayer.name;
                 overflowPointsText.textContent = pointsAdded.toLocaleString('it-IT');
                 overflowAttemptText.textContent = proposedTotalScore.toLocaleString('it-IT');
@@ -609,13 +704,36 @@
                 return;
             }
 
-            // 2. REGOLA PENALITÀ DEGLI ALTRI GIOCATORI SE RAGGIUNTI
+            // 2. GIRO FINALE: SE QUALCUNO È GIÀ A 5000 E UN ALTRO RAGGIUNGE/SUPERI I 5000 PUNTI, BUTTA GIÙ DI 500 IL PRIMO VINCITORE
             let penaltyOccurred = false;
             let attackerName = activePlayer.name;
             let victimName = "";
             let victimNewScore = 0;
 
-            if (proposedTotalScore > 0) {
+            if (state.firstWinnerIndex !== null && state.firstWinnerIndex !== state.activePlayerIndex) {
+                if (proposedTotalScore === state.targetScore) {
+                    // Il nuovo giocatore fa 5000 e penalizza il primo vincitore di 500pt!
+                    const firstWinner = state.players[state.firstWinnerIndex];
+                    if (firstWinner && firstWinner.score === 5000) {
+                        penaltyOccurred = true;
+                        victimName = firstWinner.name;
+                        
+                        firstWinner.score = 4500;
+                        victimNewScore = 4500;
+
+                        const lastTurnWinner = firstWinner.turns[firstWinner.turns.length - 1];
+                        if (lastTurnWinner) {
+                            lastTurnWinner.wasPenalized = true;
+                            lastTurnWinner.lossAmount = 500;
+                            lastTurnWinner.penalizerName = activePlayer.name;
+                            lastTurnWinner.totalScore = 4500;
+                        }
+                    }
+                }
+            }
+
+            // 3. REGOLA PENALITÀ NORMALE (SE RAGGIUNGI L'ESATTO PUNTEGGIO DI UN ALTRO GIOCATORE > 0)
+            if (proposedTotalScore > 0 && !penaltyOccurred) {
                 state.players.forEach((otherPlayer, idx) => {
                     if (idx !== state.activePlayerIndex && otherPlayer.score > 0 && otherPlayer.score === proposedTotalScore) {
                         penaltyOccurred = true;
@@ -628,7 +746,6 @@
                         otherPlayer.score = penalizedScore;
                         victimNewScore = penalizedScore;
 
-                        // Aggiorna l'ultimo turno della vittima per mostrare la penalità in tabella
                         const victimLastTurn = otherPlayer.turns[otherPlayer.turns.length - 1];
                         if (victimLastTurn) {
                             victimLastTurn.wasPenalized = true;
@@ -640,7 +757,7 @@
                 });
             }
 
-            // Aggiorna punteggio normale giocatore di turno
+            // Aggiorna punteggio del giocatore del turno
             activePlayer.score = proposedTotalScore;
             activePlayer.turns.push({
                 turnNum: currentRoundIndex + 1,
@@ -652,7 +769,12 @@
                 overflowed: false
             });
 
-            // MOSTRA POPUP PENALITÀ SE RAGGIUNTO
+            // Se è il primo ad arrivare a 5000, attiva il Giro Finale
+            if (activePlayer.score === state.targetScore && state.firstWinnerIndex === null) {
+                state.firstWinnerIndex = state.activePlayerIndex;
+            }
+
+            // MOSTRA POPUP PENALITÀ SE RAGGIUNTO O BUTTATO GIÙ
             if (penaltyOccurred) {
                 penaltyAttackerText.textContent = attackerName;
                 penaltyVictimText.textContent = victimName;
@@ -661,21 +783,37 @@
                 penaltyModal.classList.remove('hidden');
             }
 
-            // VITTORIA A 5000 ESATTI
-            if (activePlayer.score === state.targetScore) {
-                winnerName.textContent = activePlayer.name;
-                victoryModal.classList.remove('hidden');
-                if (typeof confetti === 'function') {
-                    confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
-                }
-            }
-
             finishTurnAdvance();
         }
 
         function finishTurnAdvance() {
             turnScoreInput.value = '';
-            state.activePlayerIndex = (state.activePlayerIndex + 1) % state.players.length;
+            
+            const nextPlayerIndex = (state.activePlayerIndex + 1) % state.players.length;
+
+            // Se siamo nel giro finale ed è arrivato il turno del primo vincitore, il giro è terminato!
+            if (state.firstWinnerIndex !== null && nextPlayerIndex === state.firstWinnerIndex) {
+                // Trova chi ha il punteggio più alto (o il vincitore a 5000)
+                let highestScore = -1;
+                let finalWinner = null;
+
+                state.players.forEach(p => {
+                    if (p.score > highestScore) {
+                        highestScore = p.score;
+                        finalWinner = p;
+                    }
+                });
+
+                if (finalWinner && highestScore > 0) {
+                    winnerName.textContent = finalWinner.name;
+                    victoryModal.classList.remove('hidden');
+                    if (typeof confetti === 'function') {
+                        confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
+                    }
+                }
+            }
+
+            state.activePlayerIndex = nextPlayerIndex;
             render();
         }
 
@@ -702,10 +840,12 @@
             state.gameStarted = previousState.gameStarted;
             state.players = previousState.players;
             state.activePlayerIndex = previousState.activePlayerIndex;
+            state.firstWinnerIndex = previousState.firstWinnerIndex !== undefined ? previousState.firstWinnerIndex : null;
             
             penaltyModal.classList.add('hidden');
             overflowModal.classList.add('hidden');
             victoryModal.classList.add('hidden');
+            addPlayerMidGameModal.classList.add('hidden');
 
             render();
         });
@@ -728,6 +868,7 @@
                 players: [],
                 activePlayerIndex: 0,
                 targetScore: 5000,
+                firstWinnerIndex: null,
                 historyStack: []
             };
 
@@ -736,6 +877,7 @@
             penaltyModal.classList.add('hidden');
             overflowModal.classList.add('hidden');
             victoryModal.classList.add('hidden');
+            addPlayerMidGameModal.classList.add('hidden');
 
             render();
         });
@@ -753,6 +895,8 @@
                 setupSection.classList.remove('hidden');
                 turnSection.classList.add('hidden');
                 tableSection.classList.add('hidden');
+                midGameAddPlayerBtn.classList.add('hidden');
+                lastRoundBanner.classList.add('hidden');
 
                 playerCountBadge.textContent = `${state.players.length} giocator${state.players.length === 1 ? 'e' : 'i'}`;
                 
@@ -785,6 +929,13 @@
                 setupSection.classList.add('hidden');
                 turnSection.classList.remove('hidden');
                 tableSection.classList.remove('hidden');
+                midGameAddPlayerBtn.classList.remove('hidden');
+
+                if (state.firstWinnerIndex !== null) {
+                    lastRoundBanner.classList.remove('hidden');
+                } else {
+                    lastRoundBanner.classList.add('hidden');
+                }
 
                 const maxTurns = Math.max(...state.players.map(p => p.turns.length), 0);
                 currentTurnNumber.textContent = `#${maxTurns + 1}`;
