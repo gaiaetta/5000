@@ -256,3 +256,529 @@
   </script>
 </body>
 </html>
+    <script>
+        // STATO APPLICAZIONE
+        let state = {
+            gameStarted: false,
+            players: [], // Array di { id, name, score, turns: [ { turnNum, pointsAdded, totalScore, wasPenalized, penalizerName, lossAmount, overflowed } ] }
+            activePlayerIndex: 0,
+            targetScore: 5000,
+            historyStack: [],
+            isFinalRound: false,
+            finalRoundFirstPlayerIndex: null // Indice del giocatore da cui è scattato il giro finale
+        };
+
+        // RIFERIMENTI DOM
+        const setupSection = document.getElementById('setupSection');
+        const turnSection = document.getElementById('turnSection');
+        const tableSection = document.getElementById('tableSection');
+        const finalRoundBanner = document.getElementById('finalRoundBanner');
+
+        const addPlayerForm = document.getElementById('addPlayerForm');
+        const newPlayerNameInput = document.getElementById('newPlayerName');
+        const setupPlayersList = document.getElementById('setupPlayersList');
+        const noPlayersText = document.getElementById('noPlayersText');
+        const playerCountBadge = document.getElementById('playerCountBadge');
+        const startGameBtn = document.getElementById('startGameBtn');
+
+        const currentTurnNumber = document.getElementById('currentTurnNumber');
+        const activePlayerName = document.getElementById('activePlayerName');
+        const activePlayerCurrentScore = document.getElementById('activePlayerCurrentScore');
+        const turnScoreInput = document.getElementById('turnScoreInput');
+        const clearInputBtn = document.getElementById('clearInputBtn');
+        const saveTurnBtn = document.getElementById('saveTurnBtn');
+        const farkleBtn = document.getElementById('farkleBtn');
+
+        const playerHeaders = document.getElementById('playerHeaders');
+        const tableBody = document.getElementById('tableBody');
+        const playerFooters = document.getElementById('playerFooters');
+
+        const undoGlobalBtn = document.getElementById('undoGlobalBtn');
+        const openResetModalBtn = document.getElementById('openResetModalBtn');
+        const confirmResetModal = document.getElementById('confirmResetModal');
+        const cancelResetBtn = document.getElementById('cancelResetBtn');
+        const confirmResetBtn = document.getElementById('confirmResetBtn');
+
+        // Modale Giro Finale
+        const finalRoundModal = document.getElementById('finalRoundModal');
+        const finalRoundTriggerText = document.getElementById('finalRoundTriggerText');
+        const closeFinalRoundModalBtn = document.getElementById('closeFinalRoundModalBtn');
+
+        // Modale Penalità
+        const penaltyModal = document.getElementById('penaltyModal');
+        const penaltyAttackerText = document.getElementById('penaltyAttackerText');
+        const penaltyVictimText = document.getElementById('penaltyVictimText');
+        const penaltyVictimNameSpan = document.getElementById('penaltyVictimNameSpan');
+        const penaltyNewScoreSpan = document.getElementById('penaltyNewScoreSpan');
+        const closePenaltyModalBtn = document.getElementById('closePenaltyModalBtn');
+
+        // Modale Overflow (> 5000)
+        const overflowModal = document.getElementById('overflowModal');
+        const overflowPlayerText = document.getElementById('overflowPlayerText');
+        const overflowPointsText = document.getElementById('overflowPointsText');
+        const overflowAttemptText = document.getElementById('overflowAttemptText');
+        const overflowOriginalScoreText = document.getElementById('overflowOriginalScoreText');
+        const closeOverflowModalBtn = document.getElementById('closeOverflowModalBtn');
+
+        // Modale Vittoria
+        const victoryModal = document.getElementById('victoryModal');
+        const winnerName = document.getElementById('winnerName');
+        const winnerScore = document.getElementById('winnerScore');
+        const closeVictoryModalBtn = document.getElementById('closeVictoryModalBtn');
+
+        // INIZIALIZZAZIONE
+        window.addEventListener('DOMContentLoaded', render);
+
+        // FORM AGGIUNTA GIOCATORE
+        addPlayerForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = newPlayerNameInput.value.trim();
+            if (name) {
+                state.players.push({
+                    id: Date.now().toString() + Math.random().toString(36).substring(2, 5),
+                    name: name,
+                    score: 0,
+                    turns: []
+                });
+                newPlayerNameInput.value = '';
+                render();
+            }
+        });
+
+        // AVVIA PARTITA
+        startGameBtn.addEventListener('click', () => {
+            if (state.players.length > 0) {
+                state.gameStarted = true;
+                state.activePlayerIndex = 0;
+                render();
+            }
+        });
+
+        // PULSANTI INCREMENTO RAPIDO (+50, +100, +350, +500, +1000)
+        document.querySelectorAll('.quick-add-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const addVal = parseInt(btn.getAttribute('data-val'));
+                const currentVal = parseInt(turnScoreInput.value) || 0;
+                turnScoreInput.value = currentVal + addVal;
+            });
+        });
+
+        clearInputBtn.addEventListener('click', () => {
+            turnScoreInput.value = '';
+            turnScoreInput.focus();
+        });
+
+        // CONFERMA TURNO PUNTI
+        saveTurnBtn.addEventListener('click', () => {
+            const points = parseInt(turnScoreInput.value);
+            if (isNaN(points) || points <= 0) {
+                alert("Inserisci un punteggio numerico valido maggiore di 0 oppure premi 'SBALLO / ZERO (0 pt)'.");
+                return;
+            }
+            processTurn(points);
+        });
+
+        // SBALLO (0 PT)
+        farkleBtn.addEventListener('click', () => {
+            processTurn(0);
+        });
+
+        // LOGICA DI CALCOLO DEL TURNO, 5000 TONDO, GIRO FINALE E PENALITÀ -500 PT
+        function processTurn(pointsAdded) {
+            if (!state.gameStarted || state.players.length === 0) return;
+
+            // Salva istantanea per la funzione UNDO
+            const snapshot = JSON.parse(JSON.stringify({
+                gameStarted: state.gameStarted,
+                players: state.players,
+                activePlayerIndex: state.activePlayerIndex,
+                isFinalRound: state.isFinalRound,
+                finalRoundFirstPlayerIndex: state.finalRoundFirstPlayerIndex
+            }));
+            state.historyStack.push(snapshot);
+
+            const activePlayer = state.players[state.activePlayerIndex];
+            const proposedTotalScore = activePlayer.score + pointsAdded;
+            const currentRoundIndex = activePlayer.turns.length;
+
+            // 1. REGOLA 5000 TONDO (SUPERAMENTO)
+            if (proposedTotalScore > state.targetScore) {
+                activePlayer.turns.push({
+                    turnNum: currentRoundIndex + 1,
+                    pointsAdded: pointsAdded,
+                    totalScore: activePlayer.score, // Resta al punteggio vecchio
+                    wasPenalized: false,
+                    penalizerName: null,
+                    lossAmount: 0,
+                    overflowed: true
+                });
+
+                // AVVISO POPUP OVERFLOW
+                overflowPlayerText.textContent = activePlayer.name;
+                overflowPointsText.textContent = pointsAdded.toLocaleString('it-IT');
+                overflowAttemptText.textContent = proposedTotalScore.toLocaleString('it-IT');
+                overflowOriginalScoreText.textContent = activePlayer.score.toLocaleString('it-IT');
+                overflowModal.classList.remove('hidden');
+
+                finishTurnAdvance();
+                return;
+            }
+
+            // 2. REGOLA PENALITÀ DEGLI ALTRI GIOCATORI SE RAGGIUNTI
+            let penaltyOccurred = false;
+            let attackerName = activePlayer.name;
+            let victimName = "";
+            let victimNewScore = 0;
+
+            if (proposedTotalScore > 0) {
+                state.players.forEach((otherPlayer, idx) => {
+                    if (idx !== state.activePlayerIndex && otherPlayer.score > 0 && otherPlayer.score === proposedTotalScore) {
+                        penaltyOccurred = true;
+                        victimName = otherPlayer.name;
+                        
+                        const oldScore = otherPlayer.score;
+                        const penalizedScore = Math.max(0, otherPlayer.score - 500);
+                        const loss = oldScore - penalizedScore;
+                        
+                        otherPlayer.score = penalizedScore;
+                        victimNewScore = penalizedScore;
+
+                        // Aggiorna l'ultimo turno della vittima per mostrare la penalità in tabella
+                        const victimLastTurn = otherPlayer.turns[otherPlayer.turns.length - 1];
+                        if (victimLastTurn) {
+                            victimLastTurn.wasPenalized = true;
+                            victimLastTurn.lossAmount = loss;
+                            victimLastTurn.penalizerName = activePlayer.name;
+                            victimLastTurn.totalScore = penalizedScore;
+                        }
+                    }
+                });
+            }
+
+            // Aggiorna punteggio normale giocatore di turno
+            activePlayer.score = proposedTotalScore;
+            activePlayer.turns.push({
+                turnNum: currentRoundIndex + 1,
+                pointsAdded: pointsAdded,
+                totalScore: activePlayer.score,
+                wasPenalized: false,
+                penalizerName: null,
+                lossAmount: 0,
+                overflowed: false
+            });
+
+            // MOSTRA POPUP PENALITÀ SE RAGGIUNTO
+            if (penaltyOccurred) {
+                penaltyAttackerText.textContent = attackerName;
+                penaltyVictimText.textContent = victimName;
+                penaltyVictimNameSpan.textContent = victimName;
+                penaltyNewScoreSpan.textContent = victimNewScore.toLocaleString('it-IT');
+                penaltyModal.classList.remove('hidden');
+            }
+
+            // 3. ATTIVAZIONE DEL GIRO FINALE
+            if (activePlayer.score === state.targetScore && !state.isFinalRound) {
+                // Se è solo un giocatore, vince subito
+                if (state.players.length === 1) {
+                    triggerVictory(activePlayer);
+                    finishTurnAdvance();
+                    return;
+                }
+                
+                state.isFinalRound = true;
+                state.finalRoundFirstPlayerIndex = state.activePlayerIndex;
+
+                finalRoundTriggerText.textContent = activePlayer.name;
+                finalRoundModal.classList.remove('hidden');
+            }
+
+            finishTurnAdvance();
+        }
+
+        function finishTurnAdvance() {
+            turnScoreInput.value = '';
+            
+            const nextPlayerIndex = (state.activePlayerIndex + 1) % state.players.length;
+
+            // VERIFICA SE IL GIRO FINALE È TERMINATO
+            if (state.isFinalRound && nextPlayerIndex === state.finalRoundFirstPlayerIndex) {
+                // Trova il punteggio massimo raggiunto
+                let maxScore = -1;
+                state.players.forEach(p => {
+                    if (p.score > maxScore) maxScore = p.score;
+                });
+
+                // Trova tutti i giocatori con il punteggio massimo (>= 5000)
+                const leaders = state.players.filter(p => p.score === maxScore && p.score >= state.targetScore);
+
+                if (leaders.length === 1) {
+                    // C'è un solo vincitore chiaro
+                    triggerVictory(leaders[0]);
+                } else if (leaders.length > 1) {
+                    // Parità a 5000 o più: si continua con un altro giro finale!
+                    state.finalRoundFirstPlayerIndex = nextPlayerIndex;
+                } else {
+                    // Nessuno è a 5000+ (es. a causa di penalità): il giro finale termina
+                    state.isFinalRound = false;
+                    state.finalRoundFirstPlayerIndex = null;
+                }
+            }
+
+            state.activePlayerIndex = nextPlayerIndex;
+            render();
+        }
+
+        function triggerVictory(winner) {
+            winnerName.textContent = winner.name;
+            winnerScore.textContent = winner.score.toLocaleString('it-IT');
+            victoryModal.classList.remove('hidden');
+            if (typeof confetti === 'function') {
+                confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
+            }
+        }
+
+        // CHIUSURA MODALI POPUP
+        closeFinalRoundModalBtn.addEventListener('click', () => {
+            finalRoundModal.classList.add('hidden');
+        });
+
+        closePenaltyModalBtn.addEventListener('click', () => {
+            penaltyModal.classList.add('hidden');
+        });
+
+        closeOverflowModalBtn.addEventListener('click', () => {
+            overflowModal.classList.add('hidden');
+        });
+
+        closeVictoryModalBtn.addEventListener('click', () => {
+            victoryModal.classList.add('hidden');
+        });
+
+        // ANNULLA ULTIMA MOSSA (UNDO)
+        undoGlobalBtn.addEventListener('click', () => {
+            if (state.historyStack.length === 0) {
+                alert("Nessuna mossa da annullare.");
+                return;
+            }
+            const previousState = state.historyStack.pop();
+            state.gameStarted = previousState.gameStarted;
+            state.players = previousState.players;
+            state.activePlayerIndex = previousState.activePlayerIndex;
+            state.isFinalRound = previousState.isFinalRound;
+            state.finalRoundFirstPlayerIndex = previousState.finalRoundFirstPlayerIndex;
+            
+            finalRoundModal.classList.add('hidden');
+            penaltyModal.classList.add('hidden');
+            overflowModal.classList.add('hidden');
+            victoryModal.classList.add('hidden');
+
+            render();
+        });
+
+        // RESET COMPLETO NUOVA PARTITA
+        openResetModalBtn.addEventListener('click', () => {
+            confirmResetModal.classList.remove('hidden');
+        });
+
+        cancelResetBtn.addEventListener('click', () => {
+            confirmResetModal.classList.add('hidden');
+        });
+
+        confirmResetBtn.addEventListener('click', () => {
+            confirmResetModal.classList.add('hidden');
+            
+            // AZZERAMENTO COMPLETO
+            state = {
+                gameStarted: false,
+                players: [],
+                activePlayerIndex: 0,
+                targetScore: 5000,
+                historyStack: [],
+                isFinalRound: false,
+                finalRoundFirstPlayerIndex: null
+            };
+
+            turnScoreInput.value = '';
+            newPlayerNameInput.value = '';
+            finalRoundModal.classList.add('hidden');
+            penaltyModal.classList.add('hidden');
+            overflowModal.classList.add('hidden');
+            victoryModal.classList.add('hidden');
+
+            render();
+        });
+
+        // RIMOZIONE GIOCATORE IN FASE SETUP
+        window.removeSetupPlayer = function(id) {
+            state.players = state.players.filter(p => p.id !== id);
+            render();
+        };
+
+        // RENDER GENERALE UI
+        function render() {
+            if (!state.gameStarted) {
+                // Schermata di Setup
+                setupSection.classList.remove('hidden');
+                turnSection.classList.add('hidden');
+                tableSection.classList.add('hidden');
+                finalRoundBanner.classList.add('hidden');
+
+                playerCountBadge.textContent = `${state.players.length} giocator${state.players.length === 1 ? 'e' : 'i'}`;
+                
+                if (state.players.length === 0) {
+                    noPlayersText.classList.remove('hidden');
+                    setupPlayersList.innerHTML = '';
+                    setupPlayersList.appendChild(noPlayersText);
+                    startGameBtn.disabled = true;
+                    startGameBtn.className = "w-full mt-5 py-4 rounded-2xl bg-slate-800 text-slate-500 font-extrabold text-base transition shadow-xl flex items-center justify-center space-x-2 disabled:cursor-not-allowed disabled:opacity-50";
+                } else {
+                    noPlayersText.classList.add('hidden');
+                    setupPlayersList.innerHTML = state.players.map((p, idx) => `
+                        <div class="flex items-center justify-between bg-slate-900 px-4 py-3 rounded-xl border border-slate-800">
+                            <div class="flex items-center space-x-3">
+                                <span class="w-6 h-6 rounded-full bg-slate-800 text-slate-400 font-mono-num font-bold text-xs flex items-center justify-center">${idx + 1}</span>
+                                <span class="font-extrabold text-slate-200 text-sm">${escapeHtml(p.name)}</span>
+                            </div>
+                            <button onclick="removeSetupPlayer('${p.id}')" class="text-slate-500 hover:text-red-400 transition p-1" title="Rimuovi">
+                                <i class="fa-solid fa-trash-can text-sm"></i>
+                            </button>
+                        </div>
+                    `).join('');
+
+                    startGameBtn.disabled = false;
+                    startGameBtn.className = "w-full mt-5 py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-base transition shadow-xl shadow-emerald-950 flex items-center justify-center space-x-2 active:scale-95 cursor-pointer";
+                }
+
+            } else {
+                // Schermata di Gioco Attivo
+                setupSection.classList.add('hidden');
+                turnSection.classList.remove('hidden');
+                tableSection.classList.remove('hidden');
+
+                if (state.isFinalRound) {
+                    finalRoundBanner.classList.remove('hidden');
+                } else {
+                    finalRoundBanner.classList.add('hidden');
+                }
+
+                const maxTurns = Math.max(...state.players.map(p => p.turns.length), 0);
+                currentTurnNumber.textContent = `#${maxTurns + 1}`;
+
+                const activePlayer = state.players[state.activePlayerIndex];
+                activePlayerName.textContent = activePlayer ? activePlayer.name : '---';
+                activePlayerCurrentScore.textContent = activePlayer ? activePlayer.score.toLocaleString('it-IT') : '0';
+
+                // Tabella Intestazione Giocatori
+                playerHeaders.innerHTML = `
+                    <div class="grid" style="grid-template-columns: repeat(${state.players.length}, minmax(130px, 1fr));">
+                        ${state.players.map((p, idx) => {
+                            const isActive = idx === state.activePlayerIndex;
+                            return `
+                                <div class="py-3 px-3 border-r border-slate-800 flex items-center justify-between ${isActive ? 'bg-emerald-950/80 text-emerald-300 font-extrabold border-b-2 border-b-emerald-400' : 'text-slate-300'}">
+                                    <div class="truncate flex items-center space-x-1.5">
+                                        ${isActive ? '<span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0"></span>' : ''}
+                                        <span class="truncate font-bold">${escapeHtml(p.name)}</span>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+
+                // Tabella Corpo Righe
+                let bodyHTML = '';
+                const totalRoundsToDisplay = Math.max(maxTurns, 1);
+
+                for (let r = 0; r < totalRoundsToDisplay; r++) {
+                    bodyHTML += `
+                        <tr class="${r % 2 === 0 ? 'bg-slate-900/40' : 'bg-slate-950/40'} hover:bg-slate-800/40 transition">
+                            <td class="py-3 px-3 text-center text-slate-400 font-bold border-r border-slate-800 bg-slate-950/90 sticky left-0 z-10">
+                                #${r + 1}
+                            </td>
+                            <td class="p-0" colspan="100">
+                                <div class="grid" style="grid-template-columns: repeat(${state.players.length}, minmax(130px, 1fr));">
+                                    ${state.players.map((p) => {
+                                        const turnData = p.turns[r];
+                                        
+                                        if (!turnData) {
+                                            return `<div class="py-3 px-3 border-r border-slate-800/60 text-slate-700 text-center italic">-</div>`;
+                                        }
+
+                                        const isFarkle = turnData.pointsAdded === 0;
+                                        const hasPenalty = turnData.wasPenalized;
+                                        const overflowed = turnData.overflowed;
+
+                                        if (hasPenalty) {
+                                            return `
+                                                <div class="py-2 px-2.5 border-r border-slate-800/60 penalty-card border-2 border-red-500 rounded-lg m-0.5 shadow-inner">
+                                                    <div class="flex items-center justify-between">
+                                                        <span class="text-[9px] font-black text-red-200 uppercase tracking-tighter bg-red-950 px-1 py-0.5 rounded border border-red-700">
+                                                            -500 PENALITÀ
+                                                        </span>
+                                                        <span class="text-xs font-bold text-red-300 font-mono-num">
+                                                            +${turnData.pointsAdded}
+                                                        </span>
+                                                    </div>
+                                                    <div class="text-right mt-1">
+                                                        <span class="text-xs font-black text-red-200 font-mono-num">
+                                                            ${turnData.totalScore} pt
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            `;
+                                        } else if (overflowed) {
+                                            return `
+                                                <div class="py-2 px-2.5 border-r border-slate-800/60 bg-amber-950/40 border border-amber-600/60 rounded-lg m-0.5">
+                                                    <div class="flex items-center justify-between text-[10px]">
+                                                        <span class="font-bold text-amber-400 uppercase">SUPERATO</span>
+                                                        <span class="line-through text-slate-500 font-mono-num">+${turnData.pointsAdded}</span>
+                                                    </div>
+                                                    <div class="text-right mt-0.5">
+                                                        <span class="text-xs font-bold text-amber-300 font-mono-num">${turnData.totalScore} pt</span>
+                                                    </div>
+                                                </div>
+                                            `;
+                                        } else {
+                                            return `
+                                                <div class="py-3 px-3 border-r border-slate-800/60 flex items-center justify-between">
+                                                    <span class="${isFarkle ? 'text-red-400 font-extrabold' : 'text-slate-400 text-[11px]'} font-mono-num">
+                                                        ${isFarkle ? 'SBALLO' : '+' + turnData.pointsAdded}
+                                                    </span>
+                                                    <span class="text-xs font-black text-amber-300 font-mono-num">
+                                                        ${turnData.totalScore} <span class="text-[10px] font-normal text-slate-500">pt</span>
+                                                    </span>
+                                                </div>
+                                            `;
+                                        }
+                                    }).join('')}
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }
+
+                tableBody.innerHTML = bodyHTML;
+
+                // Tabella Totali
+                playerFooters.innerHTML = `
+                    <div class="grid" style="grid-template-columns: repeat(${state.players.length}, minmax(130px, 1fr));">
+                        ${state.players.map((p) => {
+                            return `
+                                <div class="py-3.5 px-3 border-r border-slate-800 font-mono-num text-amber-400 font-black text-base">
+                                    ${p.score.toLocaleString('it-IT')} <span class="text-xs text-slate-500 font-medium">pt</span>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            }
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/[&<>"']/g, function(m) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+            });
+        }
+    </script>
+</body>
+</html>
